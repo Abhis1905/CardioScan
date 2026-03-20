@@ -163,19 +163,9 @@ def _run_prediction(body, mk):
 
 def train():
     global _X_train
-    frames = _load_uci_datasets()
-    if frames:
-        combined = pd.concat(frames, ignore_index=True)
-        combined["target"] = (combined["target"] > 0).astype(int)
-        for col in FEATURE_NAMES:
-            combined[col] = pd.to_numeric(combined[col], errors="coerce")
-            combined[col].fillna(combined[col].median(), inplace=True)
-        df = combined[FEATURE_NAMES + ["target"]].dropna(subset=["target"])
-        print(f"  ✓ Merged: {len(df)} rows")
-    else:
-        csv_path = os.path.join(os.path.dirname(__file__), "heart.csv")
-        df = pd.read_csv(csv_path)
-        print(f"  ✓ Local CSV: {len(df)} rows")
+    csv_path = os.path.join(os.path.dirname(__file__), "heart.csv")
+    df = pd.read_csv(csv_path)
+    print(f"  ✓ Local CSV: {len(df)} rows")
 
     X = df[FEATURE_NAMES]; y = df["target"]
     _dataset["shape"] = list(df.shape)
