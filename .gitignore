@@ -1,0 +1,24 @@
+# Dependencies
+frontend/node_modules/
+
+# Environment variables - NEVER push these
+.env
+*.env
+backend/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+frontend/build/
+
+# Database - don't push local db
+backend/instance/
+backend/cardioscan.db
