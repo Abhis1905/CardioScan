@@ -135,7 +135,7 @@ export default function LoginPage() {
   const handleResend = async () => {
     setResending(true);
     try {
-      await axios.post("http://localhost:8000/auth/resend-verification", { email: form.email });
+      await axios.post("https://cardioscan-production.up.railway.app/auth/resend-verification", { email: form.email });
       toast.success("Verification email resent!");
     } catch (err) { toast.error("Could not resend"); }
     finally { setResending(false); }

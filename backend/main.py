@@ -49,7 +49,7 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-ALLOWED_ORIGINS = {"http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"}
+ALLOWED_ORIGINS = {"http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001", "https://cardioscan.vercel.app", "https://cardioscan-git-main-abhis1905.vercel.app"}
 FEATURE_NAMES = ["age","sex","cp","trestbps","chol","fbs","restecg","thalach","exang","oldpeak","slope","ca","thal"]
 FIELD_RULES = {
     "age":(1,120,False),"sex":(0,1,True),"cp":(0,3,True),
@@ -620,4 +620,6 @@ if __name__=="__main__":
     print("Training models …")
     train()
     print("✅  Server → http://localhost:8000\n")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), debug=False)
+    port = int(os.environ.get("PORT", 8000))
+    print(f"✅  Server → http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
