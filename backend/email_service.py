@@ -2,10 +2,9 @@ import smtplib, os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-GMAIL_USER = os.environ.get("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
-
 def send_verification_email(to_email, name, token):
+    GMAIL_USER = os.environ.get("GMAIL_USER", "")
+    GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
         print("⚠️ Gmail credentials not set")
         return False
@@ -64,6 +63,8 @@ def send_verification_email(to_email, name, token):
         return False
 
 def send_welcome_email(to_email, name):
+    GMAIL_USER = os.environ.get("GMAIL_USER", "")
+    GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
         return False
 
