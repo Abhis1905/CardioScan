@@ -62,7 +62,7 @@ _models={}; _scalers={}; _metrics={}; _dataset={}; _feat_imp={}; _X_train=None; 
 @app.after_request
 def add_cors(resp):
     origin = request.headers.get("Origin","")
-    if origin in ALLOWED_ORIGINS:
+    if origin in ALLOWED_ORIGINS or "vercel.app" in origin or "railway.app" in origin:
         resp.headers["Access-Control-Allow-Origin"] = origin
     resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
