@@ -630,4 +630,4 @@ if __name__=="__main__":
     print("Training models …")
     train()
     print("✅  Server → http://localhost:8000\n")
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), debug=False)
