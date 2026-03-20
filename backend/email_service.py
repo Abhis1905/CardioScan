@@ -10,7 +10,7 @@ def send_verification_email(to_email, name, token):
         print("⚠️ Gmail credentials not set")
         return False
 
-    verify_url = f"http://localhost:3001/verify-email?token={token}"
+    verify_url = f"https://cardio-scan-lac.vercel.app/verify-email?token={token}"
 
     html = f"""
     <!DOCTYPE html>
@@ -87,7 +87,7 @@ def send_welcome_email(to_email, name):
             <p style="color:#be123c;font-size:14px;font-weight:600;margin:0;">⚕️ Medical Disclaimer</p>
             <p style="color:#9f1239;font-size:13px;margin:8px 0 0;">CardioScan predictions are for informational purposes only and are not a substitute for professional medical advice.</p>
           </div>
-          <a href="http://localhost:3001" style="display:inline-block;background:linear-gradient(135deg,#be123c,#f43f5e);color:white;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:700;font-size:15px;">
+          <a href="https://cardio-scan-lac.vercel.app" style="display:inline-block;background:linear-gradient(135deg,#be123c,#f43f5e);color:white;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:700;font-size:15px;">
             Start Predicting →
           </a>
         </div>
