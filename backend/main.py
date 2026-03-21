@@ -573,7 +573,7 @@ def admin_export_predictions_route():
     return Response(output.getvalue(),mimetype="text/csv",
         headers={"Content-Disposition":"attachment;filename=cardioscan_predictions.csv"})
 
-@app.get("/debug-vars")
+@app.route("/debug-vars", methods=["GET"])
 def debug_vars():
     return jsonify({
         "GMAIL_USER": os.environ.get("GMAIL_USER", "NOT SET"),
