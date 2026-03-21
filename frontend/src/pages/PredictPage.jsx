@@ -158,7 +158,6 @@ function ChatBot({ form, result, modelLabel }) {
         </div>
         <p className="text-xs text-slate-600 mt-1.5">Press Enter to send · Not a substitute for medical advice</p>
       </div>
-      <HeartbeatOverlay visible={loading}/>
       <OnboardingTour/>
     </div>
   );
