@@ -5,3 +5,4 @@ flask-bcrypt
 pandas
 numpy
 scikit-learn
+resend
