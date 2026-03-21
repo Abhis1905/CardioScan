@@ -250,10 +250,9 @@ def register():
     if User.query.filter_by(email=email).first(): return jsonify({"error":"Email already registered"}),409
     pw_hash=bcrypt.generate_password_hash(password).decode("utf-8")
     verify_token=_secrets.token_urlsafe(32)
-    user=User(name=name,email=email,password_hash=pw_hash,verify_token=verify_token,is_verified=False)
+    user=User(name=name,email=email,password_hash=pw_hash,verify_token=None,is_verified=True)
     db.session.add(user); db.session.commit()
-    send_verification_email(email,name,verify_token)
-    return jsonify({"message":"Registration successful! Please check your email.","email":email}),201
+    return jsonify({"message":"Registration successful! You can now log in.","email":email}),201
 
 @app.get("/auth/verify-email")
 def verify_email():
