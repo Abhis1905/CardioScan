@@ -575,12 +575,10 @@ def admin_export_predictions_route():
 
 @app.route("/debug-vars", methods=["GET"])
 def debug_vars():
-    return jsonify({
-        "GMAIL_USER": os.environ.get("GMAIL_USER", "NOT SET"),
-        "GMAIL_APP_PASSWORD": "SET" if os.environ.get("GMAIL_APP_PASSWORD") else "NOT SET",
-        "JWT_SECRET": "SET" if os.environ.get("JWT_SECRET") else "NOT SET",
-        "DATABASE_URL": "SET" if os.environ.get("DATABASE_URL") else "NOT SET",
-    })
+    import os
+    env_vars = dict(os.environ)
+    safe = {k: v for k, v in env_vars.items() if "KEY" not in k and "PASSWORD" not in k and "SECRET" not in k}
+    return jsonify({"all_env_keys": list(env_vars.keys()), "safe_vars": safe})
 
 @app.get("/temp-verify/<email>")
 def temp_verify(email):
