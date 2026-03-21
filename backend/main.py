@@ -37,6 +37,13 @@ except ImportError:
     HAS_SHAP = False
     print("SHAP not installed")
 
+# Fallback env vars (Railway beta runtime bug workaround)
+import os
+os.environ.setdefault("GMAIL_USER", "jacob57579@gmail.com")
+os.environ.setdefault("GMAIL_APP_PASSWORD", "mbak jgjt qpea xynx")
+os.environ.setdefault("JWT_SECRET", "cardioscan-super-secret-key-2024-abhishek")
+os.environ.setdefault("GROQ_API_KEY", "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")
+
 warnings.filterwarnings("ignore")
 app = Flask(__name__)
 
