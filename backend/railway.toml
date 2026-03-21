@@ -3,3 +3,7 @@ startCommand = "python3 main.py"
 healthcheckPath = "/"
 healthcheckTimeout = 600
 restartPolicyType = "on_failure"
+
+[env]
+GMAIL_USER = "developer@example.com"
+JWT_SECRET = "cardioscan-dev-secret-key-change-in-production-min32chars"
