@@ -5,26 +5,43 @@ db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = "users"
-    id              = db.Column(db.Integer, primary_key=True)
-    name            = db.Column(db.String(100), nullable=False)
-    email           = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash   = db.Column(db.String(256), nullable=True)
-    google_id       = db.Column(db.String(200), nullable=True, unique=True)
-    avatar          = db.Column(db.String(500), nullable=True)
-    is_verified     = db.Column(db.Boolean, default=False)
-    verify_token    = db.Column(db.String(200), nullable=True)
-    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
-    predictions     = db.relationship("Prediction", backref="user", lazy=True, cascade="all, delete-orphan")
+    id                      = db.Column(db.Integer, primary_key=True)
+    name                    = db.Column(db.String(100), nullable=False)
+    email                   = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash           = db.Column(db.String(256), nullable=True)
+    google_id               = db.Column(db.String(200), nullable=True, unique=True)
+    avatar                  = db.Column(db.String(500), nullable=True)
+    is_verified             = db.Column(db.Boolean, default=False)
+
+    # ── Verification ──────────────────────────────────────────────────────────
+    verify_token            = db.Column(db.String(200), nullable=True)
+    verify_token_expires    = db.Column(db.DateTime, nullable=True)   # NEW: expiry
+    verify_email_last_sent  = db.Column(db.DateTime, nullable=True)   # NEW: resend cooldown
+
+    # ── Password reset (SEPARATE from verify_token — was the root bug) ────────
+    reset_token             = db.Column(db.String(200), nullable=True)   # NEW column
+    reset_token_expires     = db.Column(db.DateTime, nullable=True)      # NEW: expiry
+
+    # ── Consent ───────────────────────────────────────────────────────────────
+    consent_given           = db.Column(db.Boolean, default=False)       # NEW
+    consent_at              = db.Column(db.DateTime, nullable=True)       # NEW
+
+    created_at              = db.Column(db.DateTime, default=datetime.utcnow)
+    predictions             = db.relationship(
+        "Prediction", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
-            "id":          self.id,
-            "name":        self.name,
-            "email":       self.email,
-            "avatar":      self.avatar,
-            "is_verified": self.is_verified,
-            "created_at":  self.created_at.isoformat(),
+            "id":            self.id,
+            "name":          self.name,
+            "email":         self.email,
+            "avatar":        self.avatar,
+            "is_verified":   self.is_verified,
+            "consent_given": self.consent_given,
+            "created_at":    self.created_at.isoformat(),
         }
+
 
 class Prediction(db.Model):
     __tablename__ = "predictions"
