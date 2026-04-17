@@ -42,7 +42,9 @@ export default function VerifyEmailPage() {
         setStatus(expired ? "expired" : "error");
         setMessage(data.error || "Verification failed. The link may be invalid.");
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
 
   // ── Cooldown ticker ─────────────────────────────────────────────────────────
   useEffect(() => {
