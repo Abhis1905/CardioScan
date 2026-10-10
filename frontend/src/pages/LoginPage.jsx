@@ -4,9 +4,8 @@ import { Heart, Mail, Lock, LogIn, Shield, Zap, BarChart2, Brain } from "lucide-
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { login } from "../api";
+import { login, resendVerification } from "../api";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
 
 const STATS = [
   { icon: Brain, label: "ML Models", value: "3", color: "#f43f5e" },
@@ -135,7 +134,7 @@ export default function LoginPage() {
   const handleResend = async () => {
     setResending(true);
     try {
-      await axios.post("https://cardioscan-production.up.railway.app/auth/resend-verification", { email: form.email });
+      await resendVerification(form.email);
       toast.success("Verification email resent!");
     } catch (err) { toast.error("Could not resend"); }
     finally { setResending(false); }

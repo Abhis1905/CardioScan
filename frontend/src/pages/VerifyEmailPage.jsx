@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Loader, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
-
-const API = process.env.REACT_APP_API_URL || "http://localhost:8000";
+import { verifyEmail, resendVerification } from "../api";
 
 export default function VerifyEmailPage() {
   const [searchParams]  = useSearchParams();
@@ -27,8 +25,7 @@ export default function VerifyEmailPage() {
       return;
     }
 
-    axios
-      .get(`${API}/auth/verify-email?token=${encodeURIComponent(token)}`)
+    verifyEmail(token)
       .then(({ data }) => {
         loginUser(data.token, data.user);
         setStatus("success");
@@ -59,7 +56,7 @@ export default function VerifyEmailPage() {
     setResendStatus("sending");
     setResendMsg("");
     try {
-      const { data } = await axios.post(`${API}/auth/resend-verification`, { email });
+      const { data } = await resendVerification(email);
       setResendStatus("sent");
       setResendMsg(data.message || "Verification email sent! Check your inbox.");
       setCooldown(120); // 2-minute cooldown shown to user
