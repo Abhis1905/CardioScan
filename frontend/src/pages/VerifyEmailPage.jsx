@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Loader, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { verifyEmail, resendVerification } from "../api";
+import { auth, applyActionCode } from "../firebase";
 
 export default function VerifyEmailPage() {
   const [searchParams]  = useSearchParams();
@@ -19,6 +20,22 @@ export default function VerifyEmailPage() {
   // ── Verify on mount ─────────────────────────────────────────────────────────
   useEffect(() => {
     const token = searchParams.get("token");
+    const oobCode = searchParams.get("oobCode");
+
+    if (oobCode) {
+      applyActionCode(auth, oobCode)
+        .then(() => {
+          setStatus("success");
+          setMessage("Email verified successfully! You can now log in to CardioScan.");
+          setTimeout(() => navigate("/login"), 3000);
+        })
+        .catch(() => {
+          setStatus("error");
+          setMessage("Verification link is invalid or has expired. Please log in to request a new link.");
+        });
+      return;
+    }
+
     if (!token) {
       setStatus("error");
       setMessage("No verification token found in the link. Please check your email for the correct link.");

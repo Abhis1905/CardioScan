@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getMe } from "../api";
+import { auth, signOut } from "../firebase";
 
 const AuthContext = createContext(null);
 
@@ -23,6 +24,9 @@ export function AuthProvider({ children }) {
 
   const logoutUser = () => {
     localStorage.removeItem("token");
+    try {
+      signOut(auth).catch(() => {});
+    } catch (_) {}
     setUser(null);
     window.location.href = "/";
   };
