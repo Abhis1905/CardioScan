@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     GOOGLE_CLIENT_ID: Optional[str] = None
 
+    # Firebase Authentication
+    FIREBASE_PROJECT_ID: str = "cardioscan-app"
+    FIREBASE_SERVICE_ACCOUNT_PATH: Optional[str] = None
+    FIREBASE_SERVICE_ACCOUNT_JSON: Optional[str] = None
+
     # Admin Management
     ADMIN_EMAIL: str = "admin@example.com"
 

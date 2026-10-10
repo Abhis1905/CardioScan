@@ -9,8 +9,10 @@ from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
+from app.models.cleanup import PendingFirebaseCleanup
 from app.models.user import User
 from app.schemas.auth import (
+    FirebaseAuthRequest,
     ForgotPasswordRequest,
     GoogleAuthRequest,
     ResendVerificationRequest,
@@ -19,6 +21,7 @@ from app.schemas.auth import (
     UserRegister,
 )
 from app.services.email import email_service
+from app.services.firebase_auth import firebase_auth_service
 from app.services.tokens import (
     check_resend_cooldown,
     consume_password_reset_token,
@@ -285,6 +288,122 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
         )
 
 
+@router.post("/firebase")
+def firebase_auth(payload: FirebaseAuthRequest, db: Session = Depends(get_db)):
+    """
+    Authenticate or register a user via Firebase ID Token.
+    
+    Security & Safe Account Linking Policy:
+    1. Validates the Firebase ID token cryptographically.
+    2. Enforces that email is verified in Firebase (email_verified == True).
+    3. If a user already exists with matching firebase_uid, authenticates directly.
+    4. If no user has this firebase_uid, but an existing user has the same email:
+       REJECTS with HTTP 409 Conflict ('account_exists_conflict').
+       Never automatically links or leaks account data based solely on email matching.
+    5. If no user exists with this email, provisions a new verified user account with firebase_uid.
+    6. Issues a standard CardioScan JWT (sub: user.id), preserving all downstream protected routes.
+    """
+    token_str = payload.id_token.strip()
+    if not token_str:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Firebase ID token is required."},
+        )
+
+    is_valid, decoded, error_msg = firebase_auth_service.verify_id_token(token_str)
+    if not is_valid or not decoded:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": error_msg or "Invalid or expired Firebase authentication token."},
+        )
+
+    email = (decoded.get("email") or "").strip().lower()
+    if not email:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Firebase token does not contain a valid email address."},
+        )
+
+    email_verified = decoded.get("email_verified", False)
+    if not email_verified:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": "Please verify your email address before continuing.",
+                "not_verified": True,
+                "email": email,
+            },
+        )
+
+    firebase_uid = decoded.get("uid")
+    if not firebase_uid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Firebase token does not contain a valid user identifier."},
+        )
+
+    # 1. Check if user already exists by firebase_uid
+    user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+    if user:
+        avatar = decoded.get("picture")
+        if avatar and not user.avatar:
+            user.avatar = avatar
+        if not user.is_verified:
+            user.is_verified = True
+        db.commit()
+        db.refresh(user)
+
+        jwt_token = create_access_token(subject=user.id)
+        return {
+            "token": jwt_token,
+            "user": user.to_dict(),
+            "message": "Authentication successful.",
+        }
+
+    # 2. Safe Account Linking Check: Check if an account already exists with this email
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={
+                "error": "An account with this email already exists. Automatic linking is disabled for security. Please sign in with your original method.",
+                "code": "account_exists_conflict",
+            },
+        )
+
+    # 3. Create brand new verified user
+    name = (decoded.get("name") or email.split("@")[0]).strip()
+    avatar = decoded.get("picture")
+
+    new_user = User(
+        name=name,
+        email=email,
+        firebase_uid=firebase_uid,
+        avatar=avatar,
+        is_verified=True,
+    )
+    db.add(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError:
+        db.rollback()
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={
+                "error": "Account could not be created due to a conflict.",
+                "code": "account_exists_conflict",
+            },
+        )
+
+    jwt_token = create_access_token(subject=new_user.id)
+    return {
+        "token": jwt_token,
+        "user": new_user.to_dict(),
+        "message": "Welcome to CardioScan!",
+    }
+
+
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user.to_dict()
@@ -304,6 +423,42 @@ def record_consent(current_user: User = Depends(get_current_user), db: Session =
 
 @router.delete("/delete-account")
 def delete_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    fb_uid = current_user.firebase_uid
     db.delete(current_user)
     db.commit()
-    return {"message": "Account deleted successfully"}
+
+    if fb_uid:
+        fb_deleted = firebase_auth_service.delete_user(fb_uid)
+        if fb_deleted:
+            return {
+                "completed": True,
+                "firebase_cleanup": "completed",
+                "message": "Account deleted successfully",
+            }
+        else:
+            cleanup_record = PendingFirebaseCleanup(
+                firebase_uid=fb_uid,
+                attempts=1,
+                last_error="Initial deletion attempt failed or Firebase Admin uninitialized",
+                last_attempt_at=datetime.utcnow(),
+            )
+            db.add(cleanup_record)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
+            return JSONResponse(
+                status_code=status.HTTP_202_ACCEPTED,
+                content={
+                    "completed": False,
+                    "firebase_cleanup": "pending",
+                    "message": "Database account deleted. Firebase identity cleanup is queued and pending.",
+                },
+            )
+
+    return {
+        "completed": True,
+        "firebase_cleanup": "none",
+        "message": "Account deleted successfully",
+    }

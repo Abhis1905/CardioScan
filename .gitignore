@@ -29,4 +29,15 @@ backend/cardioscan.db
 *.joblib
 backend/app/artifacts/
 
+# Credentials & Service Accounts - NEVER commit keys
+*firebase*.json
+*service-account*.json
+serviceAccountKey.json
+*.pem
+*.key
+
+# Legacy backup configs
+*legacy*
+
+
 

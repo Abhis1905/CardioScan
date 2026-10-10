@@ -17,6 +17,7 @@ class User(Base):
     email = Column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(256), nullable=True)
     google_id = Column(String(200), unique=True, nullable=True)
+    firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
     avatar = Column(String(500), nullable=True)
     is_verified = Column(Boolean, default=False, nullable=False)
 
