@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Heart, Lock, CheckCircle, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { resetPassword } from "../api";
+import { auth, confirmPasswordReset } from "../firebase";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -11,6 +12,8 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const navigate = useNavigate();
   const token = searchParams.get("token");
+  const oobCode = searchParams.get("oobCode");
+  const resetCode = oobCode || token;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,15 +21,22 @@ export default function ResetPasswordPage() {
     if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      await resetPassword(token, form.password);
+      if (oobCode) {
+        await confirmPasswordReset(auth, oobCode, form.password);
+      } else {
+        await resetPassword(token, form.password);
+      }
       setDone(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
-      toast.error(err?.response?.data?.error || "Reset failed. Link may have expired.");
+      const msg = err?.code === "auth/invalid-action-code" || err?.code === "auth/expired-action-code"
+        ? "This reset link is invalid or has expired."
+        : (err?.response?.data?.error || err?.message || "Reset failed. Link may have expired.");
+      toast.error(msg);
     } finally { setLoading(false); }
   };
 
-  if (!token) {
+  if (!resetCode) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="glass-card p-10 text-center max-w-md w-full">

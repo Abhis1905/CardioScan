@@ -4,6 +4,7 @@ import { User, Mail, Calendar, Trash2, AlertTriangle, CheckCircle, Heart, Activi
 import toast from "react-hot-toast";
 import { deleteAccount, getHistory } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { auth } from "../firebase";
 
 function StatCard({ icon: Icon, label, value, color, sub }) {
   return (
@@ -37,9 +38,18 @@ export default function ProfilePage() {
     if (confirmText !== "DELETE") { toast.error('Type "DELETE" to confirm'); return; }
     setDeleting(true);
     try {
-      await deleteAccount();
+      const res = await deleteAccount();
+      if (auth.currentUser) {
+        try {
+          await auth.currentUser.delete();
+        } catch (_) {}
+      }
       logoutUser();
-      toast.success("Account deleted successfully");
+      if (res?.status === 202 || res?.data?.firebase_cleanup === "pending") {
+        toast("Account deleted. Firebase identity cleanup is queued in the background.", { icon: "ℹ️" });
+      } else {
+        toast.success("Account deleted successfully");
+      }
       navigate("/");
     } catch (err) {
       toast.error(err?.response?.data?.error || "Could not delete account");

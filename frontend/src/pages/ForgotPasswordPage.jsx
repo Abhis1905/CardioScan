@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { forgotPassword } from "../api";
+import { auth, sendPasswordResetEmail } from "../firebase";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +14,19 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await forgotPassword(email);
+      try {
+        await sendPasswordResetEmail(auth, email.trim());
+      } catch (fbErr) {
+        if (fbErr.code === "auth/invalid-email") {
+          toast.error("Please enter a valid email address.");
+          setLoading(false);
+          return;
+        }
+        // Fallback for native CardioScan accounts
+        try {
+          await forgotPassword(email.trim());
+        } catch (_) {}
+      }
       setSent(true);
     } catch (err) {
       toast.error("Something went wrong. Please try again.");

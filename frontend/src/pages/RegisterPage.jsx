@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { register } from "../api";
+import { auth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut } from "../firebase";
 
 const FEATURES = [
   { icon: Activity, text: "Real-time risk analysis", color: "#f43f5e" },
@@ -19,18 +20,66 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [emailSendFailed, setEmailSendFailed] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
+    let userCredential = null;
     try {
-      await register(form);
-      setRegisteredEmail(form.email);
-      setRegistered(true);
+      userCredential = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
+      if (form.name.trim()) {
+        try {
+          await updateProfile(userCredential.user, { displayName: form.name.trim() });
+        } catch (_) {}
+      }
     } catch (err) {
-      toast.error(err?.response?.data?.error || "Registration failed");
-    } finally { setLoading(false); }
+      let msg = "Registration failed. Please try again.";
+      if (err.code === "auth/email-already-in-use") {
+        msg = "This email is already registered. Please sign in.";
+      } else if (err.code === "auth/invalid-email") {
+        msg = "Please enter a valid email address.";
+      } else if (err.code === "auth/weak-password") {
+        msg = "Password is too weak. Please choose a stronger password.";
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      toast.error(msg);
+      setLoading(false);
+      return;
+    }
+
+    // Account creation succeeded. Dispatch verification email
+    try {
+      await sendEmailVerification(userCredential.user);
+    } catch (sendErr) {
+      console.warn("Failed to dispatch initial verification email:", sendErr);
+      setEmailSendFailed(true);
+      toast.error("Account created, but verification email could not be sent. You can resend it below.");
+    } finally {
+      await signOut(auth);
+    }
+
+    setRegisteredEmail(form.email.trim());
+    setRegistered(true);
+    setLoading(false);
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, registeredEmail, form.password);
+      await sendEmailVerification(cred.user);
+      await signOut(auth);
+      setEmailSendFailed(false);
+      toast.success("Verification email sent! Check your inbox.");
+    } catch (err) {
+      toast.error("Could not resend email. Please try logging in to resend.");
+    } finally {
+      setResending(false);
+    }
   };
 
   if (registered) return (
@@ -42,10 +91,28 @@ export default function RegisterPage() {
           className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={40} className="text-emerald-400"/>
         </motion.div>
-        <h2 className="font-display text-2xl font-bold text-white mb-3">{t("auth.check_email")}</h2>
-        <p className="text-slate-400 text-sm mb-2">We sent a verification link to:</p>
-        <p className="text-crimson-400 font-semibold mb-6">{registeredEmail}</p>
-        <p className="text-slate-500 text-xs mb-8">Click the link to verify. Check spam if you don't see it.</p>
+        <h2 className="font-display text-2xl font-bold text-white mb-3">
+          {emailSendFailed ? "Account Created!" : t("auth.check_email")}
+        </h2>
+        <p className="text-slate-400 text-sm mb-2">
+          {emailSendFailed
+            ? "We had trouble sending the verification link automatically to:"
+            : "We sent a verification link to:"}
+        </p>
+        <p className="text-crimson-400 font-semibold mb-4">{registeredEmail}</p>
+        {emailSendFailed ? (
+          <div className="mb-6">
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-crimson-600 hover:bg-crimson-500 transition-all disabled:opacity-60"
+            >
+              {resending ? "Sending..." : "Resend Verification Email"}
+            </button>
+          </div>
+        ) : (
+          <p className="text-slate-500 text-xs mb-8">Click the link to verify. Check spam if you don't see it.</p>
+        )}
         <Link to="/login" className="text-crimson-400 hover:text-crimson-300 font-medium text-sm">
           {t("auth.back_login")} →
         </Link>
