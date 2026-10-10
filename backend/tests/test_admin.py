@@ -79,3 +79,15 @@ def test_admin_predictions_and_export(client, admin_headers, test_user, db_sessi
     # Delete prediction
     res_del_p = client.delete(f"/admin/predictions/{pred.id}", headers=admin_headers)
     assert res_del_p.status_code == 200
+
+
+def test_admin_process_cleanups(client, admin_headers, auth_headers):
+    # Non-admin forbidden
+    res_forbidden = client.post("/admin/process-cleanups", headers=auth_headers)
+    assert res_forbidden.status_code == 403
+
+    # Admin allowed
+    res_admin = client.post("/admin/process-cleanups", headers=admin_headers)
+    assert res_admin.status_code == 200
+    assert "resolved" in res_admin.json()
+    assert "remaining" in res_admin.json()

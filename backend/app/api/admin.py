@@ -204,3 +204,15 @@ def admin_export_predictions(admin: User = Depends(get_current_admin), db: Sessi
         media_type="text/csv",
         headers={"Content-Disposition": "attachment;filename=cardioscan_predictions.csv"},
     )
+
+
+@router.post("/process-cleanups")
+def admin_process_cleanups(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Trigger retry processing of pending Firebase cleanups."""
+    from app.services.firebase_auth import firebase_auth_service
+    resolved, remaining = firebase_auth_service.process_pending_cleanups(db)
+    return {
+        "message": "Cleanup processing executed",
+        "resolved": resolved,
+        "remaining": remaining,
+    }

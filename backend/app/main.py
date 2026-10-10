@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
@@ -8,7 +9,8 @@ from fastapi.responses import JSONResponse
 from app.api import admin, analytics, auth, chat, history, predictions
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import engine
+from app.db.session import SessionLocal, engine
+from app.services.firebase_auth import firebase_auth_service
 from app.services.ml import ml_service
 
 # Configure structured logging
@@ -45,7 +47,40 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("ML model initialization warning: %s", str(e))
 
+    # Process pending Firebase cleanups surviving from previous process execution
+    try:
+        with SessionLocal() as db:
+            resolved, remaining = firebase_auth_service.process_pending_cleanups(db)
+            if resolved > 0 or remaining > 0:
+                logger.info(
+                    "Startup pending Firebase cleanups processed: %d resolved, %d remaining",
+                    resolved,
+                    remaining,
+                )
+    except Exception as cleanup_err:
+        logger.warning("Startup pending Firebase cleanup check notice: %s", str(cleanup_err))
+
+    # Background worker for periodic cleanup retry
+    async def periodic_cleanup_worker():
+        while True:
+            try:
+                await asyncio.sleep(1800)  # Check every 30 minutes
+                with SessionLocal() as db:
+                    firebase_auth_service.process_pending_cleanups(db)
+            except asyncio.CancelledError:
+                break
+            except Exception as worker_err:
+                logger.warning("Periodic Firebase cleanup worker error: %s", str(worker_err))
+
+    cleanup_task = asyncio.create_task(periodic_cleanup_worker())
+
     yield
+
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
 
     logger.info("Shutting down CardioScan FastAPI backend.")
 
