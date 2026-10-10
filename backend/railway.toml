@@ -1,9 +1,5 @@
 [deploy]
-startCommand = "python3 main.py"
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 healthcheckPath = "/"
-healthcheckTimeout = 600
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
-
-[env]
-GMAIL_USER = "jacob57579@gmail.com"
-JWT_SECRET = "cardioscan-super-secret-key-2024-abhishek"
