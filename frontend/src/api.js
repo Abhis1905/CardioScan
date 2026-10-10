@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API = axios.create({ baseURL: "https://cardioscan-production.up.railway.app" });
+export const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "https://cardioscan-api-1gbm.onrender.com";
+
+const API = axios.create({ baseURL: API_BASE_URL, timeout: 60000 });
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -20,6 +23,8 @@ export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
 export const googleAuth = (credential) => API.post("/auth/google", { credential });
 export const getMe = () => API.get("/auth/me");
+export const verifyEmail = (token) => API.get(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+export const resendVerification = (email) => API.post("/auth/resend-verification", { email });
 export const getHistory = () => API.get("/history");
 export const getPrediction = (id) => API.get(`/history/${id}`);
 export const deletePrediction = (id) => API.delete(`/history/${id}`);
@@ -43,3 +48,5 @@ export const adminExportPredictions = async () => {
   const a = document.createElement("a"); a.href = url; a.download = "cardioscan_predictions.csv"; a.click();
 };
 export const adminCheck = () => API.get("/admin/check");
+
+export default API;
