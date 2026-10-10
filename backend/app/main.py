@@ -1,0 +1,101 @@
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.api import admin, analytics, auth, chat, history, predictions
+from app.core.config import settings
+from app.db.base import Base
+from app.db.session import engine
+from app.services.ml import ml_service
+
+# Configure structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("cardioscan")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle events for startup and shutdown."""
+    logger.info("Starting up CardioScan FastAPI v%s (environment: %s)", settings.VERSION, settings.ENVIRONMENT)
+
+    # Fail fast if production requirements are not satisfied
+    settings.validate_production_safety()
+
+    # Schema management: avoid redundant or unsafe auto-creation in production
+    if settings.is_production:
+        logger.info("Production mode: database schema is managed via Alembic migrations.")
+    else:
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database schema initialized successfully.")
+        except Exception as e:
+            logger.warning("Database schema initialization note: %s", str(e))
+
+    # Load or train ML models
+    try:
+        logger.info("Initializing ML models...")
+        ml_service.load_or_train()
+        logger.info("ML models ready.")
+    except Exception as e:
+        logger.error("ML model initialization warning: %s", str(e))
+
+    yield
+
+    logger.info("Shutting down CardioScan FastAPI backend.")
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# CORS Middleware
+origins = settings.cors_origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins if origins else ["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Format Pydantic validation errors matching frontend expectations."""
+    errors = []
+    for error in exc.errors():
+        loc = " -> ".join(str(l) for l in error.get("loc", []))
+        msg = error.get("msg", "Invalid field")
+        errors.append(f"{loc}: {msg}")
+    error_summary = "; ".join(errors)
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": error_summary, "error": error_summary},
+    )
+
+
+# Register all routers
+app.include_router(analytics.router)
+app.include_router(auth.router)
+app.include_router(predictions.router)
+app.include_router(history.router)
+app.include_router(admin.router)
+app.include_router(chat.router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)

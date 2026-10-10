@@ -22,3 +22,11 @@ frontend/build/
 # Database - don't push local db
 backend/instance/
 backend/cardioscan.db
+*.db
+
+# Caches & Test Artifacts
+.pytest_cache/
+*.joblib
+backend/app/artifacts/
+
+
