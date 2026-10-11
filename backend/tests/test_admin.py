@@ -15,12 +15,18 @@ def test_admin_authorization(client, auth_headers, admin_headers):
 
 
 def test_admin_stats(client, admin_headers, test_user, db_session):
-    pred = Prediction(
+    pred_rf = Prediction(
         user_id=test_user.id, age=50, sex=1, cp=1, trestbps=120, chol=200, fbs=0, restecg=0,
         thalach=150, exang=0, oldpeak=1.0, slope=1, ca=0, thal=2,
         prediction=1, probability=0.8, risk_level="High", model_used="random_forest"
     )
-    db_session.add(pred)
+    pred_svm = Prediction(
+        user_id=test_user.id, age=55, sex=0, cp=2, trestbps=125, chol=210, fbs=0, restecg=0,
+        thalach=155, exang=0, oldpeak=0.8, slope=1, ca=0, thal=2,
+        prediction=1, probability=0.75, risk_level="Moderate", model_used="svm"
+    )
+    db_session.add(pred_rf)
+    db_session.add(pred_svm)
     db_session.commit()
 
     res = client.get("/admin/stats", headers=admin_headers)
@@ -28,8 +34,13 @@ def test_admin_stats(client, admin_headers, test_user, db_session):
     data = res.json()
     assert "users" in data
     assert "predictions" in data
+    assert "models" in data
     assert data["users"]["total"] >= 2
-    assert data["predictions"]["total"] >= 1
+    assert data["predictions"]["total"] >= 2
+    assert "svm" in data["models"]
+    assert data["models"]["svm"] >= 1
+    assert "random_forest" in data["models"]
+    assert data["models"]["random_forest"] >= 1
 
 
 def test_admin_users_and_deletion(client, admin_headers, test_user, admin_user, db_session):

@@ -35,7 +35,7 @@ def admin_stats(admin: User = Depends(get_current_admin), db: Session = Depends(
 
     model_counts = {
         mk: db.query(Prediction).filter(Prediction.model_used == mk).count()
-        for mk in ["random_forest", "logistic_regression", "knn", "ensemble"]
+        for mk in ["random_forest", "logistic_regression", "knn", "svm", "ensemble"]
     }
 
     week_ago = datetime.utcnow() - timedelta(days=7)

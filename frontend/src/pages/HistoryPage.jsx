@@ -79,7 +79,7 @@ function TimelineCard({ pred, onDelete, index }) {
   const isPositive = pred.prediction === 1;
   const color = pred.risk_level==="Low"?"#10b981":pred.risk_level==="Moderate"?"#f59e0b":"#f43f5e";
   const date = new Date(pred.created_at);
-  const modelLabel = pred.model_used==="random_forest"?"RF":pred.model_used==="logistic_regression"?"LR":pred.model_used==="ensemble"?"ENS":"KNN";
+  const modelLabel = pred.model_used==="random_forest"?"RF":pred.model_used==="logistic_regression"?"LR":pred.model_used==="svm"?"SVM":pred.model_used==="ensemble"?"ENS":"KNN";
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this prediction?")) return;

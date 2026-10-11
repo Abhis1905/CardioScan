@@ -8,6 +8,7 @@ const MODELS = [
   { key: "logistic_regression", label: "Logistic Regression", color: "#f43f5e" },
   { key: "random_forest", label: "Random Forest", color: "#10b981" },
   { key: "knn", label: "KNN", color: "#6366f1" },
+  { key: "svm", label: "Support Vector Machine", color: "#8b5cf6" },
 ];
 
 const PYTHON_CODE = `# Step 1: Import Libraries
@@ -17,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report
 
 # Step 2: Load Dataset
@@ -31,7 +33,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# Step 5: Feature Scaling (for LR & KNN)
+# Step 5: Feature Scaling (for LR, KNN & SVM)
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled  = scaler.transform(X_test)
@@ -66,26 +68,40 @@ print("🔹 KNN")
 print("Accuracy:", accuracy_score(y_test, y_pred_knn))
 
 # ===========================
+# 🔹 Model 4: Support Vector Machine
+# ===========================
+svm = SVC(kernel="rbf", probability=True, random_state=42)
+svm.fit(X_train_scaled, y_train)
+y_pred_svm = svm.predict(X_test_scaled)
+print("🔹 Support Vector Machine")
+print("Accuracy:", accuracy_score(y_test, y_pred_svm))
+print(classification_report(y_test, y_pred_svm))
+
+# ===========================
 # 🔹 Compare All Models
 # ===========================
 print("\\n===== Model Comparison =====")
 print("Logistic Regression Accuracy:", accuracy_score(y_test, y_pred_lr))
 print("Random Forest Accuracy:      ", accuracy_score(y_test, y_pred_rf))
-print("KNN Accuracy:                ", accuracy_score(y_test, y_pred_knn))`;
+print("KNN Accuracy:                ", accuracy_score(y_test, y_pred_knn))
+print("SVM Accuracy:                ", accuracy_score(y_test, y_pred_svm))`;
 
 function MetricCard({ label, value, color = "#f43f5e" }) {
+  const displayVal = typeof value === "number" ? (value * 100).toFixed(1) : "—";
   return (
     <div className="glass-card p-5">
       <p className="text-xs text-slate-500 uppercase tracking-widest mb-1">{label}</p>
       <p className="font-display text-3xl font-bold" style={{ color }}>
-        {(value * 100).toFixed(1)}<span className="text-base text-slate-500">%</span>
+        {displayVal}<span className="text-base text-slate-500">%</span>
       </p>
     </div>
   );
 }
 
 function ConfusionMatrix({ cm }) {
-  if (!cm) return null;
+  if (!cm || !Array.isArray(cm) || cm.length < 2 || !Array.isArray(cm[0]) || !Array.isArray(cm[1])) {
+    return <div className="text-slate-500 text-xs text-center py-8">Confusion matrix unavailable</div>;
+  }
   const [[tn, fp], [fn, tp]] = cm;
   const cells = [
     { label: "TN", value: tn, bg: "rgba(16,185,129,0.2)", text: "#10b981" },
@@ -109,6 +125,30 @@ function ConfusionMatrix({ cm }) {
       </div>
     </div>
   );
+}
+
+function getTprAtFpr(rocCurve, targetFpr) {
+  if (!rocCurve || !Array.isArray(rocCurve.fpr) || !Array.isArray(rocCurve.tpr)) {
+    return null;
+  }
+  const { fpr, tpr } = rocCurve;
+  const n = Math.min(fpr.length, tpr.length);
+  if (n === 0) return null;
+  if (targetFpr <= fpr[0]) return tpr[0];
+  if (targetFpr >= fpr[n - 1]) return tpr[n - 1];
+
+  for (let i = 1; i < n; i++) {
+    if (fpr[i] >= targetFpr) {
+      const f0 = fpr[i - 1];
+      const f1 = fpr[i];
+      const t0 = tpr[i - 1];
+      const t1 = tpr[i];
+      if (f1 === f0) return t1;
+      const alpha = (targetFpr - f0) / (f1 - f0);
+      return +(t0 + alpha * (t1 - t0)).toFixed(4);
+    }
+  }
+  return tpr[n - 1];
 }
 
 function CodeBlock() {
@@ -188,9 +228,30 @@ export default function MetricsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getMetrics(), getFeatureImportance("random_forest"), getFeatureImportance("logistic_regression")])
-      .then(([m, rfFi, lrFi]) => { setMetrics(m.data); setFeatureImp({ random_forest: rfFi.data, logistic_regression: lrFi.data }); })
-      .catch(console.error).finally(() => setLoading(false));
+    Promise.allSettled([
+      getMetrics(),
+      getFeatureImportance("random_forest"),
+      getFeatureImportance("logistic_regression"),
+      getFeatureImportance("svm"),
+    ])
+      .then(([mRes, rfRes, lrRes, svmRes]) => {
+        if (mRes.status === "fulfilled" && mRes.value?.data) {
+          setMetrics(mRes.value.data);
+        }
+        const imp = {};
+        if (rfRes.status === "fulfilled" && rfRes.value?.data) {
+          imp.random_forest = rfRes.value.data;
+        }
+        if (lrRes.status === "fulfilled" && lrRes.value?.data) {
+          imp.logistic_regression = lrRes.value.data;
+        }
+        if (svmRes.status === "fulfilled" && svmRes.value?.data) {
+          imp.svm = svmRes.value.data;
+        }
+        setFeatureImp(imp);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return (
@@ -205,20 +266,47 @@ export default function MetricsPage() {
     </div>
   );
 
-  const active = metrics[activeModel];
-  const rocData = metrics.logistic_regression.roc_curve.fpr.map((fpr, i) => ({
-    fpr, lr: metrics.logistic_regression.roc_curve.tpr[i],
-    rf: metrics.random_forest.roc_curve.tpr[i],
-    knn: metrics.knn.roc_curve.tpr[i],
-  }));
-  const radarData = ["accuracy", "auc", "precision", "recall", "f1"].map((key) => ({
-    metric: key.toUpperCase(),
-    "Logistic Regression": +(metrics.logistic_regression[key] * 100).toFixed(1),
-    "Random Forest": +(metrics.random_forest[key] * 100).toFixed(1),
-    "KNN": +(metrics.knn[key] * 100).toFixed(1),
-  }));
+  const active = (metrics && metrics[activeModel]) || {};
+
+  const grid = Array.from({ length: 51 }, (_, i) => +(i / 50).toFixed(2));
+  const rocData = grid.map((fpr) => {
+    const point = { fpr };
+    if (metrics?.logistic_regression?.roc_curve) {
+      point.lr = getTprAtFpr(metrics.logistic_regression.roc_curve, fpr);
+    }
+    if (metrics?.random_forest?.roc_curve) {
+      point.rf = getTprAtFpr(metrics.random_forest.roc_curve, fpr);
+    }
+    if (metrics?.knn?.roc_curve) {
+      point.knn = getTprAtFpr(metrics.knn.roc_curve, fpr);
+    }
+    if (metrics?.svm?.roc_curve) {
+      point.svm = getTprAtFpr(metrics.svm.roc_curve, fpr);
+    }
+    return point;
+  });
+
+  const radarData = ["accuracy", "auc", "precision", "recall", "f1"].map((key) => {
+    const row = { metric: key.toUpperCase() };
+    if (metrics?.logistic_regression?.[key] != null) {
+      row["Logistic Regression"] = +(metrics.logistic_regression[key] * 100).toFixed(1);
+    }
+    if (metrics?.random_forest?.[key] != null) {
+      row["Random Forest"] = +(metrics.random_forest[key] * 100).toFixed(1);
+    }
+    if (metrics?.knn?.[key] != null) {
+      row["KNN"] = +(metrics.knn[key] * 100).toFixed(1);
+    }
+    if (metrics?.svm?.[key] != null) {
+      row["SVM"] = +(metrics.svm[key] * 100).toFixed(1);
+    }
+    return row;
+  });
+
   const fiModel = featureImp[activeModel] || featureImp["random_forest"] || {};
-  const fiData = Object.entries(fiModel).map(([k, v]) => ({ name: k, value: +(v * 100).toFixed(2) })).sort((a, b) => b.value - a.value).slice(0, 10);
+  const fiData = Object.entries(fiModel)
+    .map(([k, v]) => ({ name: k, value: +(v * 100).toFixed(2) }))
+    .sort((a, b) => b.value - a.value);
   const FI_GRADIENT = ["#f43f5e", "#fb7185", "#fd8da0", "#fda4af", "#fecdd3"];
 
   return (
@@ -226,7 +314,7 @@ export default function MetricsPage() {
       <div className="mb-8 animate-fadeinup">
         <div className="flex items-center gap-2 text-crimson-400 text-sm font-mono mb-3 opacity-70"><BarChart2 size={13}/> MODEL PERFORMANCE</div>
         <h1 className="font-display text-4xl font-bold text-white">Model <span className="gradient-text">Metrics</span></h1>
-        <p className="text-slate-400 mt-2 text-sm">Compare performance across all three trained classifiers.</p>
+        <p className="text-slate-400 mt-2 text-sm">Compare performance across trained classifiers.</p>
       </div>
 
       <div className="flex gap-3 mb-8 flex-wrap">
@@ -263,7 +351,7 @@ export default function MetricsPage() {
         </div>
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4"><Layers size={15} className="text-crimson-400"/><h3 className="font-display font-semibold text-white text-sm uppercase tracking-wide">Feature Importance</h3></div>
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={fiData} layout="vertical" margin={{left:0,right:20}}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false}/>
               <XAxis type="number" tick={{fill:"#475569",fontSize:11}} tickFormatter={v=>`${v}%`}/>
@@ -287,9 +375,12 @@ export default function MetricsPage() {
               <YAxis tick={{fill:"#475569",fontSize:10}}/>
               <Tooltip contentStyle={{background:"#0f172a",border:"1px solid rgba(244,63,94,0.2)",borderRadius:8}}/>
               <Legend wrapperStyle={{fontSize:12,color:"#94a3b8"}}/>
-              <Line type="monotone" dataKey="lr" name={`LR (AUC ${metrics.logistic_regression.auc})`} stroke="#f43f5e" strokeWidth={2} dot={false}/>
-              <Line type="monotone" dataKey="rf" name={`RF (AUC ${metrics.random_forest.auc})`} stroke="#10b981" strokeWidth={2} dot={false}/>
-              <Line type="monotone" dataKey="knn" name={`KNN (AUC ${metrics.knn.auc})`} stroke="#6366f1" strokeWidth={2} dot={false}/>
+              <Line type="monotone" dataKey="lr" name={`LR (AUC ${metrics?.logistic_regression?.auc ?? "N/A"})`} stroke="#f43f5e" strokeWidth={2} dot={false}/>
+              <Line type="monotone" dataKey="rf" name={`RF (AUC ${metrics?.random_forest?.auc ?? "N/A"})`} stroke="#10b981" strokeWidth={2} dot={false}/>
+              <Line type="monotone" dataKey="knn" name={`KNN (AUC ${metrics?.knn?.auc ?? "N/A"})`} stroke="#6366f1" strokeWidth={2} dot={false}/>
+              {metrics?.svm && (
+                <Line type="monotone" dataKey="svm" name={`SVM (AUC ${metrics?.svm?.auc ?? "N/A"})`} stroke="#8b5cf6" strokeWidth={2} dot={false}/>
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -303,6 +394,9 @@ export default function MetricsPage() {
               <Radar name="LR" dataKey="Logistic Regression" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.15}/>
               <Radar name="RF" dataKey="Random Forest" stroke="#10b981" fill="#10b981" fillOpacity={0.15}/>
               <Radar name="KNN" dataKey="KNN" stroke="#6366f1" fill="#6366f1" fillOpacity={0.15}/>
+              {metrics?.svm && (
+                <Radar name="SVM" dataKey="SVM" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15}/>
+              )}
               <Legend wrapperStyle={{fontSize:12,color:"#94a3b8"}}/>
               <Tooltip contentStyle={{background:"#0f172a",border:"1px solid rgba(244,63,94,0.2)",borderRadius:8}}/>
             </RadarChart>
