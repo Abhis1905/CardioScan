@@ -144,7 +144,7 @@ export default function ProfilePage() {
                   {latest.prediction===1?"Heart Disease Detected":"No Heart Disease"}
                 </p>
                 <p className="text-slate-500 text-xs mt-0.5">
-                  {new Date(latest.created_at).toLocaleString()} · {latest.model_used === "random_forest" ? "Random Forest" : latest.model_used === "logistic_regression" ? "Logistic Regression" : latest.model_used === "ensemble" ? "Ensemble" : "KNN"}
+                  {new Date(latest.created_at).toLocaleString()} · {latest.model_used === "random_forest" ? "Random Forest" : latest.model_used === "logistic_regression" ? "Logistic Regression" : latest.model_used === "svm" ? "Support Vector Machine" : latest.model_used === "ensemble" ? "Ensemble" : "KNN"}
                 </p>
               </div>
             </div>

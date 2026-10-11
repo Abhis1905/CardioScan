@@ -252,11 +252,12 @@ export default function AdminPage() {
                       { label: "Random Forest", key: "random_forest", color: "#10b981" },
                       { label: "Logistic Regression", key: "logistic_regression", color: "#f43f5e" },
                       { label: "KNN", key: "knn", color: "#6366f1" },
+                      { label: "Support Vector Machine", key: "svm", color: "#8b5cf6" },
                     ].map(({ label, key, color }) => (
                       <div key={key}>
-                        <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{label}</span><span className="font-mono">{stats.models[key]}</span></div>
+                        <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{label}</span><span className="font-mono">{stats.models?.[key] ?? 0}</span></div>
                         <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${stats.predictions.total ? (stats.models[key]/stats.predictions.total)*100 : 0}%`, background: color }}/>
+                          <div className="h-full rounded-full" style={{ width: `${stats.predictions.total && stats.models?.[key] ? (stats.models[key]/stats.predictions.total)*100 : 0}%`, background: color }}/>
                         </div>
                       </div>
                     ))}

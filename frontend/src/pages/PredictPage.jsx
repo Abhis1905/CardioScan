@@ -45,6 +45,7 @@ const MODELS = [
   { key: "logistic_regression", label: "Logistic Regression", icon: "📈" },
   { key: "random_forest", label: "Random Forest", icon: "🌲" },
   { key: "knn", label: "K-Nearest Neighbors", icon: "🔵" },
+  { key: "svm", label: "Support Vector Machine", icon: "⚡" },
   { key: "ensemble", label: "Ensemble (All 3)", icon: "🎯" },
 ];
 function buildDefaults() {
