@@ -8,6 +8,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -15,6 +17,8 @@ from sklearn.preprocessing import StandardScaler
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+REQUIRED_MODELS = {"logistic_regression", "random_forest", "knn", "svm"}
 
 FEATURE_NAMES = [
     "age", "sex", "cp", "trestbps", "chol", "fbs", "restecg",
@@ -141,6 +145,23 @@ class MLService:
         )
         self.feature_importance["knn"] = self.feature_importance["random_forest"]
 
+        # 4. Support Vector Machine (RBF kernel)
+        svm = SVC(kernel="rbf", probability=True, C=1.0, random_state=42)
+        svm.fit(Xs_tr, y_train)
+        self.models["svm"] = svm
+        self.metrics["svm"] = self._build_metrics(
+            "Support Vector Machine", y_test, svm.predict(Xs_te), svm.predict_proba(Xs_te)[:, 1]
+        )
+        perm_result = permutation_importance(
+            svm, Xs_te, y_test, n_repeats=10, random_state=42, scoring="roc_auc"
+        )
+        raw_importances = np.maximum(0, perm_result.importances_mean)
+        tot_perm = raw_importances.sum()
+        norm_importances = raw_importances / tot_perm if tot_perm > 0 else np.ones(len(FEATURE_NAMES)) / len(FEATURE_NAMES)
+        self.feature_importance["svm"] = {
+            fn: round(float(v), 4) for fn, v in zip(FEATURE_NAMES, norm_importances)
+        }
+
         # Save bundle to disk
         os.makedirs(self.cache_dir, exist_ok=True)
         bundle = {
@@ -156,19 +177,24 @@ class MLService:
         logger.info("Successfully trained and saved model artifacts to %s", self.cache_path)
 
     def load_or_train(self) -> None:
-        """Load pre-trained artifacts from disk cache if present; otherwise train."""
+        """Load pre-trained artifacts from disk cache if present and complete; otherwise train."""
         if os.path.exists(self.cache_path):
             try:
                 bundle = joblib.load(self.cache_path)
-                self.models = bundle["models"]
-                self.scalers = bundle["scalers"]
-                self.metrics = bundle["metrics"]
-                self.dataset_stats = bundle["dataset_stats"]
-                self.feature_importance = bundle["feature_importance"]
-                self.X_train_bg = bundle["X_train_bg"]
-                self.is_initialized = True
-                logger.info("Loaded models bundle successfully from cache.")
-                return
+                loaded_models = bundle.get("models", {})
+                if REQUIRED_MODELS.issubset(loaded_models.keys()):
+                    self.models = loaded_models
+                    self.scalers = bundle["scalers"]
+                    self.metrics = bundle["metrics"]
+                    self.dataset_stats = bundle["dataset_stats"]
+                    self.feature_importance = bundle["feature_importance"]
+                    self.X_train_bg = bundle["X_train_bg"]
+                    self.is_initialized = True
+                    logger.info("Loaded models bundle successfully from cache.")
+                    return
+                else:
+                    missing = REQUIRED_MODELS - set(loaded_models.keys())
+                    logger.warning("Cache bundle is missing required models (%s); retraining.", missing)
             except Exception as e:
                 logger.warning("Cache load failed (%s); retraining models.", str(e))
 
@@ -209,7 +235,7 @@ class MLService:
         x_arr = x_df.values.astype(float)
 
         model = self.models[model_key]
-        scaled = model_key in ("logistic_regression", "knn")
+        scaled = model_key in ("logistic_regression", "knn", "svm")
         sc = self.scalers["standard"]
 
         if scaled:
