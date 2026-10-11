@@ -22,7 +22,8 @@ export const chatWithBot = (system, messages) => API.post("/chat", { system, mes
 export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
 export const googleAuth = (credential) => API.post("/auth/google", { credential });
-export const firebaseAuth = (idToken) => API.post("/auth/firebase", { id_token: idToken });
+export const verifyTurnstile = (turnstileToken) => API.post("/auth/verify-turnstile", { turnstile_token: turnstileToken });
+export const firebaseAuth = (idToken, turnstileToken) => API.post("/auth/firebase", { id_token: idToken, turnstile_token: turnstileToken });
 export const getMe = () => API.get("/auth/me");
 export const verifyEmail = (token) => API.get(`/auth/verify-email?token=${encodeURIComponent(token)}`);
 export const resendVerification = (email) => API.post("/auth/resend-verification", { email });

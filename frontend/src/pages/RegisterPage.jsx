@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Mail, Lock, User, UserPlus, CheckCircle, Activity, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { register } from "../api";
+import { register, verifyTurnstile } from "../api";
 import { auth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut } from "../firebase";
+import TurnstileWidget from "../components/TurnstileWidget";
 
 const FEATURES = [
   { icon: Activity, text: "Real-time risk analysis", color: "#f43f5e" },
@@ -22,11 +23,29 @@ export default function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [emailSendFailed, setEmailSendFailed] = useState(false);
   const [resending, setResending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error("Please complete the bot protection check.");
+      return;
+    }
     if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
+
+    // Verify Turnstile bot protection token server-side before creating account
+    try {
+      await verifyTurnstile(turnstileToken);
+    } catch (turnstileErr) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+      toast.error(turnstileErr?.response?.data?.error || "Bot verification failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     let userCredential = null;
     try {
       userCredential = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
@@ -36,6 +55,8 @@ export default function RegisterPage() {
         } catch (_) {}
       }
     } catch (err) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       let msg = "Registration failed. Please try again.";
       if (err.code === "auth/email-already-in-use") {
         msg = "This email is already registered. Please sign in.";
@@ -211,8 +232,18 @@ export default function RegisterPage() {
               </motion.div>
             ))}
 
+            {/* Bot Protection Widget */}
+            <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:0.32}}>
+              <TurnstileWidget
+                ref={turnstileRef}
+                onVerify={(token) => setTurnstileToken(token)}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+            </motion.div>
+
             <motion.div initial={{opacity:0,y:15}} animate={{opacity:1,y:0}} transition={{delay:0.35}}>
-              <motion.button type="submit" disabled={loading}
+              <motion.button type="submit" disabled={loading || !turnstileToken}
                 whileHover={{scale:1.02}} whileTap={{scale:0.97}}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-display font-semibold text-white animate-glow disabled:opacity-60"
                 style={{background:"linear-gradient(135deg,#be123c,#f43f5e)"}}>
