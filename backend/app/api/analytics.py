@@ -67,5 +67,6 @@ def list_models():
             {"key": "logistic_regression", "label": "Logistic Regression"},
             {"key": "random_forest", "label": "Random Forest"},
             {"key": "knn", "label": "K-Nearest Neighbors"},
+            {"key": "svm", "label": "Support Vector Machine"},
         ]
     }

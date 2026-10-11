@@ -48,6 +48,19 @@ def test_predict_knn(client):
     assert data["model_used"] == "knn"
 
 
+def test_predict_svm(client):
+    payload = {**SAMPLE_CLINICAL_DATA, "model": "svm"}
+    response = client.post("/predict", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["prediction"] in (0, 1)
+    assert 0.0 <= data["probability"] <= 1.0
+    assert data["risk_level"] in ("Low", "Moderate", "High")
+    assert data["model_used"] == "svm"
+    assert len(data["shap_values"]) == 13
+    assert len(data["feature_names"]) == 13
+
+
 def test_predict_ensemble(client):
     payload = {**SAMPLE_CLINICAL_DATA, "model": "random_forest", "ensemble": True}
     response = client.post("/predict", json=payload)
@@ -96,3 +109,13 @@ def test_whatif_analysis(client):
     assert "prediction" in data
     assert "probability" in data
     assert "risk_level" in data
+
+
+def test_whatif_svm(client):
+    payload = {**SAMPLE_CLINICAL_DATA, "model": "svm"}
+    response = client.post("/whatif", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["prediction"] in (0, 1)
+    assert 0.0 <= data["probability"] <= 1.0
+    assert data["risk_level"] in ("Low", "Moderate", "High")
