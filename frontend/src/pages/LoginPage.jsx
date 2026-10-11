@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, Mail, Lock, LogIn, Shield, Zap, BarChart2, Brain } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +14,7 @@ import {
   signOut,
 } from "../firebase";
 import { useAuth } from "../context/AuthContext";
+import TurnstileWidget from "../components/TurnstileWidget";
 
 const STATS = [
   { icon: Brain, label: "ML Models", value: "3", color: "#f43f5e" },
@@ -122,11 +123,17 @@ export default function LoginPage() {
   const [notVerified, setNotVerified] = useState(false);
   const [resending, setResending] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
   const { loginUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error("Please complete the bot protection check.");
+      return;
+    }
     setLoading(true);
     setNotVerified(false);
     try {
@@ -145,7 +152,7 @@ export default function LoginPage() {
         // Fallback for pre-existing native accounts
         if (fbErr.code === "auth/user-not-found" || fbErr.code === "auth/invalid-credential") {
           try {
-            const { data } = await login(form);
+            const { data } = await login({ ...form, turnstile_token: turnstileToken });
             setSuccess(true);
             setTimeout(() => { loginUser(data.token, data.user); navigate("/predict"); }, 800);
             return;
@@ -162,10 +169,12 @@ export default function LoginPage() {
       }
 
       // 2. Exchange verified Firebase ID token for internal CardioScan JWT
-      const { data } = await firebaseAuth(idToken);
+      const { data } = await firebaseAuth(idToken, turnstileToken);
       setSuccess(true);
       setTimeout(() => { loginUser(data.token, data.user); navigate("/predict"); }, 800);
     } catch (err) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       if (err?.response?.data?.code === "account_exists_conflict" || err?.response?.status === 409) {
         toast.error("An account with this email already exists. Automatic linking is disabled for security. Please sign in with your original method.");
       } else if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
@@ -180,14 +189,20 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!turnstileToken) {
+      toast.error("Please complete the bot protection check before signing in with Google.");
+      return;
+    }
     setGoogleLoading(true);
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const idToken = await userCredential.user.getIdToken();
-      const { data } = await firebaseAuth(idToken);
+      const { data } = await firebaseAuth(idToken, turnstileToken);
       setSuccess(true);
       setTimeout(() => { loginUser(data.token, data.user); navigate("/predict"); }, 800);
     } catch (err) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       if (err.code === "auth/popup-closed-by-user") {
         // User closed the popup, do not show error
       } else if (err?.response?.data?.code === "account_exists_conflict" || err?.response?.status === 409) {
@@ -301,9 +316,19 @@ export default function LoginPage() {
               </div>
             </motion.div>
 
+            {/* Bot Protection Widget */}
+            <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:0.28}}>
+              <TurnstileWidget
+                ref={turnstileRef}
+                onVerify={(token) => setTurnstileToken(token)}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+            </motion.div>
+
             {/* Submit */}
             <motion.div initial={{opacity:0,y:15}} animate={{opacity:1,y:0}} transition={{delay:0.3}}>
-              <motion.button type="submit" disabled={loading}
+              <motion.button type="submit" disabled={loading || !turnstileToken}
                 whileHover={{scale:1.02}} whileTap={{scale:0.97}}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-display font-semibold text-white animate-glow disabled:opacity-60"
                 style={{background:"linear-gradient(135deg,#be123c,#f43f5e)"}}>
@@ -329,7 +354,7 @@ export default function LoginPage() {
           <motion.button
             type="button"
             onClick={handleGoogleSignIn}
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || !turnstileToken}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-slate-700/60 bg-slate-800/40 text-slate-200 hover:bg-slate-800 hover:border-slate-600 transition-all text-sm font-medium disabled:opacity-60"
