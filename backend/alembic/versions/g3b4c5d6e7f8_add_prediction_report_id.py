@@ -25,15 +25,17 @@ def upgrade() -> None:
         batch_op.create_index('ix_predictions_report_id', ['report_id'], unique=True)
 
     # 2. Deterministic backfill for any existing rows to guarantee stability and prevent collisions
-    bind = op.get_bind()
-    preds = bind.execute(sa.text("SELECT id FROM predictions WHERE report_id IS NULL")).fetchall()
-    for row in preds:
-        pred_id = row[0]
-        rep_id = f"CS-REP-{pred_id:06d}"
-        bind.execute(
-            sa.text("UPDATE predictions SET report_id = :rep_id WHERE id = :id"),
-            {"rep_id": rep_id, "id": pred_id}
-        )
+    from alembic import context
+    if not context.is_offline_mode():
+        bind = op.get_bind()
+        preds = bind.execute(sa.text("SELECT id FROM predictions WHERE report_id IS NULL")).fetchall()
+        for row in preds:
+            pred_id = row[0]
+            rep_id = f"CS-REP-{pred_id:06d}"
+            bind.execute(
+                sa.text("UPDATE predictions SET report_id = :rep_id WHERE id = :id"),
+                {"rep_id": rep_id, "id": pred_id}
+            )
 
 
 def downgrade() -> None:

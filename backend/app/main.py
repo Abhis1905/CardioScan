@@ -119,6 +119,22 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Handle unhandled server exceptions, ensuring CORS headers are preserved."""
+    logger.error("Unhandled server exception on %s: %s", request.url.path, exc, exc_info=True)
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin and (origin in settings.cors_origins or "*" in settings.cors_origins):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"error": "An internal server error occurred. Please try again later."},
+        headers=headers,
+    )
+
+
 # Register all routers
 app.include_router(analytics.router)
 app.include_router(auth.router)
