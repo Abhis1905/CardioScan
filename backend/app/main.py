@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import admin, analytics, auth, chat, history, predictions
+from app.api import admin, analytics, auth, chat, history, predictions, profile, reports
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
@@ -126,6 +126,8 @@ app.include_router(predictions.router)
 app.include_router(history.router)
 app.include_router(admin.router)
 app.include_router(chat.router)
+app.include_router(profile.router)
+app.include_router(reports.router)
 
 
 if __name__ == "__main__":

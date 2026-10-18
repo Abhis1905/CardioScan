@@ -31,8 +31,18 @@ export function AuthProvider({ children }) {
     window.location.href = "/";
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await getMe();
+      setUser(res.data);
+      return res.data;
+    } catch (_) {
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, loginUser, logoutUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, loginUser, logoutUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

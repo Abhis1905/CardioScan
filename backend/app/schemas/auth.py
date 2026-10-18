@@ -8,11 +8,13 @@ class UserRegister(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=6)
+    turnstile_token: Optional[str] = Field(None, description="Cloudflare Turnstile verification token")
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    turnstile_token: Optional[str] = Field(None, description="Cloudflare Turnstile verification token")
 
 
 class GoogleAuthRequest(BaseModel):
@@ -21,6 +23,11 @@ class GoogleAuthRequest(BaseModel):
 
 class FirebaseAuthRequest(BaseModel):
     id_token: str = Field(..., min_length=10)
+    turnstile_token: Optional[str] = Field(None, description="Cloudflare Turnstile verification token")
+
+
+class TurnstileVerifyRequest(BaseModel):
+    turnstile_token: str = Field(..., min_length=1, description="Cloudflare Turnstile verification token")
 
 
 class ForgotPasswordRequest(BaseModel):

@@ -29,9 +29,9 @@ export default function OnboardingTour({ onDone }) {
     <AnimatePresence>
       <motion.div
         initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-        className="fixed inset-0 z-40 pointer-events-none">
+        className="fixed inset-0 z-50 pointer-events-none flex items-end justify-end p-6 sm:p-8">
         {/* Dim overlay */}
-        <div className="absolute inset-0 bg-black/40 pointer-events-auto" onClick={finish}/>
+        <div className="absolute inset-0 bg-[#35483E]/20 backdrop-blur-[2px] pointer-events-auto" onClick={finish}/>
 
         {/* Tour card */}
         <motion.div
@@ -40,38 +40,38 @@ export default function OnboardingTour({ onDone }) {
           animate={{opacity:1, scale:1, y:0}}
           exit={{opacity:0, scale:0.9, y:-10}}
           transition={{type:"spring", stiffness:300, damping:25}}
-          className="absolute bottom-8 right-8 pointer-events-auto"
+          className="relative pointer-events-auto glossy-card w-full max-w-xs"
           style={{
-            background:"linear-gradient(145deg,rgba(13,20,36,0.98),rgba(17,24,39,0.98))",
-            border:"1px solid rgba(244,63,94,0.3)",
-            borderRadius:16,
-            padding:"20px 24px",
-            maxWidth:280,
-            boxShadow:"0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,63,94,0.1)",
+            backgroundColor: "rgba(255, 255, 255, 0.96)",
+            border: "1px solid #E5E0D6",
+            borderRadius: 16,
+            padding: "20px 24px",
+            maxWidth: 300,
+            boxShadow: "0 20px 40px -10px rgba(53, 72, 62, 0.18), 0 0 0 1px #E5E0D6",
           }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-crimson-500/20 border border-crimson-500/30 flex items-center justify-center">
-                <Zap size={11} className="text-crimson-400"/>
+              <div className="w-6 h-6 rounded-full bg-[#E4EDE5] border border-[#E5E0D6] flex items-center justify-center text-[#35483E]">
+                <Zap size={11} className="text-[#35483E]"/>
               </div>
-              <span className="text-xs text-crimson-400 font-mono uppercase tracking-widest">
+              <span className="text-xs text-[#52665A] font-mono uppercase tracking-widest font-semibold">
                 {step+1} / {STEPS.length}
               </span>
             </div>
-            <button onClick={finish} className="text-slate-600 hover:text-slate-300 transition-colors">
+            <button onClick={finish} className="text-[#8A9990] hover:text-[#35483E] transition-colors">
               <X size={14}/>
             </button>
           </div>
 
-          <h3 className="font-display font-bold text-white mb-1">{STEPS[step].title}</h3>
-          <p className="text-slate-400 text-sm leading-relaxed mb-4">{STEPS[step].desc}</p>
+          <h3 className="font-serif font-bold text-[#35483E] mb-1">{STEPS[step].title}</h3>
+          <p className="text-[#52665A] text-xs leading-relaxed mb-4">{STEPS[step].desc}</p>
 
           {/* Progress dots */}
           <div className="flex items-center justify-between">
             <div className="flex gap-1.5">
               {STEPS.map((_,i) => (
                 <motion.div key={i}
-                  animate={{width: i===step ? 20 : 6, background: i===step ? "#f43f5e" : "#334155"}}
+                  animate={{width: i===step ? 20 : 6, background: i===step ? "#35483E" : "#E5E0D6"}}
                   transition={{duration:0.3}}
                   className="h-1.5 rounded-full"
                 />
@@ -79,13 +79,12 @@ export default function OnboardingTour({ onDone }) {
             </div>
             <div className="flex gap-2">
               <button onClick={finish}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors px-2 py-1">
+                className="text-xs text-[#52665A] hover:text-[#35483E] transition-colors px-2 py-1">
                 Skip
               </button>
               <button
                 onClick={() => step < STEPS.length - 1 ? setStep(s=>s+1) : finish()}
-                className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-all"
-                style={{background:"linear-gradient(135deg,#be123c,#f43f5e)"}}>
+                className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-all glossy-btn-primary">
                 {step < STEPS.length - 1 ? "Next" : "Done"}
                 <ChevronRight size={11}/>
               </button>

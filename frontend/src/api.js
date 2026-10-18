@@ -1,7 +1,10 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "https://cardioscan-api-1gbm.onrender.com";
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://cardioscan-api-1gbm.onrender.com");
 
 const API = axios.create({ baseURL: API_BASE_URL, timeout: 60000 });
 
@@ -17,6 +20,7 @@ export const getMetrics = () => API.get("/metrics");
 export const getModelMetrics = (model) => API.get(`/metrics/${model}`);
 export const getFeatureImportance = (model) => API.get(`/feature-importance/${model}`);
 export const getDatasetStats = () => API.get("/dataset-stats");
+export const getEvaluationAudit = () => API.get("/evaluation-audit");
 export const listModels = () => API.get("/models");
 export const chatWithBot = (system, messages) => API.post("/chat", { system, messages });
 export const register = (data) => API.post("/auth/register", data);
@@ -25,9 +29,13 @@ export const googleAuth = (credential) => API.post("/auth/google", { credential 
 export const verifyTurnstile = (turnstileToken) => API.post("/auth/verify-turnstile", { turnstile_token: turnstileToken });
 export const firebaseAuth = (idToken, turnstileToken) => API.post("/auth/firebase", { id_token: idToken, turnstile_token: turnstileToken });
 export const getMe = () => API.get("/auth/me");
+export const getProfile = () => API.get("/profile/me");
+export const updateProfile = (data) => API.put("/profile/me", data);
+export const correctProfile = (data) => API.post("/profile/me/correct", data);
+export const getProfileCorrections = () => API.get("/profile/me/corrections");
 export const verifyEmail = (token) => API.get(`/auth/verify-email?token=${encodeURIComponent(token)}`);
 export const resendVerification = (email) => API.post("/auth/resend-verification", { email });
-export const getHistory = () => API.get("/history");
+export const getHistory = (params) => API.get("/history", { params });
 export const getPrediction = (id) => API.get(`/history/${id}`);
 export const deletePrediction = (id) => API.delete(`/history/${id}`);
 export const updateNotes = (id, notes) => API.put(`/history/${id}/notes`, { notes });
@@ -50,5 +58,6 @@ export const adminExportPredictions = async () => {
   const a = document.createElement("a"); a.href = url; a.download = "cardioscan_predictions.csv"; a.click();
 };
 export const adminCheck = () => API.get("/admin/check");
+export const verifyReport = (reportId) => API.get(`/reports/verify/${encodeURIComponent(reportId)}`);
 
 export default API;

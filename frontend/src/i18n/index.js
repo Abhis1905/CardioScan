@@ -26,11 +26,25 @@ i18n
       pt: { translation: pt },
     },
     fallbackLng: "en",
+    supportedLngs: ["en", "hi", "es", "fr", "de", "ar", "zh", "pt"],
+    nonExplicitSupportedLngs: true,
+    cleanCode: true,
     detection: {
       order: ["localStorage", "navigator"],
+      lookupLocalStorage: "i18nextLng",
       caches: ["localStorage"],
     },
     interpolation: { escapeValue: false },
   });
+
+const syncDirection = (lng) => {
+  if (typeof document === "undefined") return;
+  const code = (lng || "en").split("-")[0];
+  document.documentElement.dir = code === "ar" ? "rtl" : "ltr";
+  document.documentElement.lang = code;
+};
+
+i18n.on("languageChanged", syncDirection);
+syncDirection(i18n.resolvedLanguage || i18n.language);
 
 export default i18n;

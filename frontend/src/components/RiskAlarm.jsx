@@ -21,7 +21,7 @@ export default function RiskAlarm({ trigger, riskLevel }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.15, 0, 0.1, 0, 0.08, 0] }}
           transition={{ duration: 1.8, times: [0, 0.1, 0.3, 0.5, 0.7, 0.85, 1] }}
-          style={{ background: "radial-gradient(ellipse at center, #f43f5e, #be123c)" }}
+          style={{ background: "radial-gradient(ellipse at center, rgba(179, 93, 82, 0.18), transparent 70%)" }}
         />
       )}
     </AnimatePresence>

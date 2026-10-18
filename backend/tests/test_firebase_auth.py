@@ -391,3 +391,125 @@ def test_process_pending_cleanups_retry(db_session):
             firebase_uid="fb_retry_uid_777"
         ).first()
         assert item_check is None
+
+
+def test_firebase_auth_service_initialization_and_malformed_token():
+    """Verify that unmocked FirebaseAuthService initializes cleanly without service account and rejects malformed tokens without DefaultCredentialsError."""
+    # Ensure initialized
+    init_res = firebase_auth_service.ensure_initialized()
+    assert init_res is True
+
+    # Empty token
+    valid, claims, err = firebase_auth_service.verify_id_token("")
+    assert valid is False
+    assert claims is None
+    assert "required" in err.lower()
+
+    # Short token
+    valid, claims, err = firebase_auth_service.verify_id_token("12345")
+    assert valid is False
+    assert claims is None
+    assert "invalid" in err.lower()
+
+    # Malformed token (must return invalid token without DefaultCredentialsError)
+    valid, claims, err = firebase_auth_service.verify_id_token("malformed.jwt.payload.string")
+    assert valid is False
+    assert claims is None
+    assert "invalid" in err.lower()
+
+
+def test_firebase_fallback_verifier_crypto_and_cache():
+    """Verify that _verify_with_google_oauth2 cryptographically validates signatures, audiences, and expirations using cached certs."""
+    import time
+    import base64
+    import json
+    import datetime
+    from cryptography.hazmat.primitives.asymmetric import rsa, padding
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+
+    # 1. Generate test RSA key & cert
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, u"firebase-test")])
+    cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        issuer
+    ).public_key(
+        key.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).not_valid_before(
+        datetime.datetime.utcnow()
+    ).not_valid_after(
+        datetime.datetime.utcnow() + datetime.timedelta(days=1)
+    ).sign(key, hashes.SHA256())
+
+    cert_pem = cert.public_bytes(serialization.Encoding.PEM).decode("utf-8")
+    test_kid = "test_kid_firebase_123"
+
+    # Inject mock cached cert
+    with patch.object(firebase_auth_service, "_get_google_public_certs", return_value={test_kid: cert_pem}):
+        # A. Valid token
+        now = int(time.time())
+        header = {"alg": "RS256", "kid": test_kid}
+        payload = {
+            "iss": f"https://securetoken.google.com/{settings.FIREBASE_PROJECT_ID}",
+            "aud": settings.FIREBASE_PROJECT_ID,
+            "sub": "user_firebase_777",
+            "email": "fb.patient@cardioscan.org",
+            "email_verified": True,
+            "name": "FB Patient",
+            "exp": now + 3600,
+            "iat": now,
+        }
+        h_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
+        p_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+        msg = f"{h_b64}.{p_b64}".encode("utf-8")
+        sig = key.sign(msg, padding.PKCS1v15(), hashes.SHA256())
+        sig_b64 = base64.urlsafe_b64encode(sig).decode().rstrip("=")
+        valid_jwt = f"{h_b64}.{p_b64}.{sig_b64}"
+
+        is_valid, claims, err = firebase_auth_service._verify_with_google_oauth2(valid_jwt)
+        assert is_valid is True
+        assert claims["uid"] == "user_firebase_777"
+        assert claims["email"] == "fb.patient@cardioscan.org"
+        assert claims["email_verified"] is True
+        assert err is None
+
+        # B. Expired token
+        payload_exp = dict(payload, exp=now - 100)
+        p_exp_b64 = base64.urlsafe_b64encode(json.dumps(payload_exp).encode()).decode().rstrip("=")
+        msg_exp = f"{h_b64}.{p_exp_b64}".encode("utf-8")
+        sig_exp = key.sign(msg_exp, padding.PKCS1v15(), hashes.SHA256())
+        sig_exp_b64 = base64.urlsafe_b64encode(sig_exp).decode().rstrip("=")
+        expired_jwt = f"{h_b64}.{p_exp_b64}.{sig_exp_b64}"
+
+        is_valid_exp, claims_exp, err_exp = firebase_auth_service._verify_with_google_oauth2(expired_jwt)
+        assert is_valid_exp is False
+        assert claims_exp is None
+        assert "expired" in err_exp.lower()
+
+        # C. Tampered signature
+        bad_sig = base64.urlsafe_b64encode(b"X" * 256).decode().rstrip("=")
+        tampered_jwt = f"{h_b64}.{p_b64}.{bad_sig}"
+        is_valid_bad, claims_bad, err_bad = firebase_auth_service._verify_with_google_oauth2(tampered_jwt)
+        assert is_valid_bad is False
+        assert claims_bad is None
+        assert "invalid" in err_bad.lower()
+
+        # D. Wrong audience
+        payload_aud = dict(payload, aud="wrong-firebase-project")
+        p_aud_b64 = base64.urlsafe_b64encode(json.dumps(payload_aud).encode()).decode().rstrip("=")
+        msg_aud = f"{h_b64}.{p_aud_b64}".encode("utf-8")
+        sig_aud = key.sign(msg_aud, padding.PKCS1v15(), hashes.SHA256())
+        sig_aud_b64 = base64.urlsafe_b64encode(sig_aud).decode().rstrip("=")
+        aud_jwt = f"{h_b64}.{p_aud_b64}.{sig_aud_b64}"
+
+        is_valid_aud, claims_aud, err_aud = firebase_auth_service._verify_with_google_oauth2(aud_jwt)
+        assert is_valid_aud is False
+        assert claims_aud is None
+        assert "invalid" in err_aud.lower()
+
+

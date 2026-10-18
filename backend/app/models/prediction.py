@@ -16,6 +16,11 @@ class Prediction(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
+    # Recorded patient identity at time of assessment
+    patient_name = Column(String(100), nullable=True)
+    patient_id = Column(String(32), nullable=True)
+    report_id = Column(String(32), unique=True, index=True, nullable=True)
+
     # 13 Clinical features
     age = Column(Float, nullable=False)
     sex = Column(Integer, nullable=False)
@@ -53,9 +58,22 @@ class Prediction(Base):
             except Exception:
                 parsed_shap = []
 
+        recorded_name = self.patient_name or (self.user.name if self.user else None)
+        recorded_pid = self.patient_id or (self.user.patient_id if self.user else None)
+        current_name = self.user.name if self.user else recorded_name
+        current_pid = self.user.patient_id if self.user else recorded_pid
+        effective_report_id = self.report_id or (f"CS-REP-{self.id:06d}" if self.id else None)
+
         return {
             "id": self.id,
+            "report_id": effective_report_id,
+            "uhid": effective_report_id,
             "user_id": self.user_id,
+            "patient_name": recorded_name,
+            "patient_id": recorded_pid,
+            "current_profile_name": current_name,
+            "current_patient_id": current_pid,
+            "name_was_corrected": bool(recorded_name and current_name and recorded_name != current_name),
             "age": self.age,
             "sex": self.sex,
             "cp": self.cp,

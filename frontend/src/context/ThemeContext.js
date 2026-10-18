@@ -14,9 +14,9 @@ export function ThemeProvider({ children }) {
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
     localStorage.setItem("cardioscan-theme", dark ? "dark" : "light");
     if (dark) {
-      document.body.style.background = "#0a0f1e";
+      document.body.style.background = "#141D18";
     } else {
-      document.body.style.background = "#f1f5f9";
+      document.body.style.background = "#F7F5F0";
     }
   }, [dark]);
 

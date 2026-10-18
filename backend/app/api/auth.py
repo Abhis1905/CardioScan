@@ -17,6 +17,7 @@ from app.schemas.auth import (
     GoogleAuthRequest,
     ResendVerificationRequest,
     ResetPasswordRequest,
+    TurnstileVerifyRequest,
     UserLogin,
     UserRegister,
 )
@@ -30,12 +31,47 @@ from app.services.tokens import (
     verify_email_token,
     verify_password_reset_token,
 )
+from app.services.patient_identity import assign_patient_id, retire_patient_id
+from app.services.turnstile import turnstile_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _get_client_ip(request: Request) -> Optional[str]:
+    """Safely extract the client IP address from request headers or socket."""
+    if not request:
+        return None
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return None
+
+
+@router.post("/verify-turnstile")
+def verify_turnstile(payload: TurnstileVerifyRequest, request: Request):
+    """Verify a standalone Cloudflare Turnstile token."""
+    client_ip = _get_client_ip(request)
+    is_valid, error_msg = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
+    if not is_valid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": error_msg or "Bot verification failed."},
+        )
+    return {"success": True, "message": "Bot verification passed."}
+
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(payload: UserRegister, db: Session = Depends(get_db)):
+def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
+    client_ip = _get_client_ip(request)
+    turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
+    if not turnstile_valid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": turnstile_err or "Bot verification failed."},
+        )
+
     name = payload.name.strip()
     email = payload.email.strip().lower()
     password = payload.password
@@ -102,7 +138,15 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-def login(payload: UserLogin, db: Session = Depends(get_db)):
+def login(payload: UserLogin, request: Request, db: Session = Depends(get_db)):
+    client_ip = _get_client_ip(request)
+    turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
+    if not turnstile_valid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": turnstile_err or "Bot verification failed."},
+        )
+
     email = payload.email.strip().lower()
     password = payload.password
 
@@ -122,6 +166,10 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
                 "email": email,
             },
         )
+
+    # Idempotently ensure permanent patient ID is assigned to verified account
+    if not user.patient_id:
+        assign_patient_id(user, db)
 
     token = create_access_token(subject=user.id)
     return {
@@ -279,6 +327,9 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
                 db.commit()
                 db.refresh(user)
 
+        if user.is_verified and not user.patient_id:
+            assign_patient_id(user, db)
+
         jwt_token = create_access_token(subject=user.id)
         return {"token": jwt_token, "user": user.to_dict()}
     except Exception as e:
@@ -289,20 +340,29 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/firebase")
-def firebase_auth(payload: FirebaseAuthRequest, db: Session = Depends(get_db)):
+def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = Depends(get_db)):
     """
     Authenticate or register a user via Firebase ID Token.
     
     Security & Safe Account Linking Policy:
-    1. Validates the Firebase ID token cryptographically.
-    2. Enforces that email is verified in Firebase (email_verified == True).
-    3. If a user already exists with matching firebase_uid, authenticates directly.
-    4. If no user has this firebase_uid, but an existing user has the same email:
+    1. Validates Cloudflare Turnstile bot verification token.
+    2. Validates the Firebase ID token cryptographically.
+    3. Enforces that email is verified in Firebase (email_verified == True).
+    4. If a user already exists with matching firebase_uid, authenticates directly.
+    5. If no user has this firebase_uid, but an existing user has the same email:
        REJECTS with HTTP 409 Conflict ('account_exists_conflict').
        Never automatically links or leaks account data based solely on email matching.
-    5. If no user exists with this email, provisions a new verified user account with firebase_uid.
-    6. Issues a standard CardioScan JWT (sub: user.id), preserving all downstream protected routes.
+    6. If no user exists with this email, provisions a new verified user account with firebase_uid.
+    7. Issues a standard CardioScan JWT (sub: user.id), preserving all downstream protected routes.
     """
+    client_ip = _get_client_ip(request)
+    turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
+    if not turnstile_valid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": turnstile_err or "Bot verification failed."},
+        )
+
     token_str = payload.id_token.strip()
     if not token_str:
         return JSONResponse(
@@ -353,6 +413,9 @@ def firebase_auth(payload: FirebaseAuthRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
+        if not user.patient_id:
+            assign_patient_id(user, db)
+
         jwt_token = create_access_token(subject=user.id)
         return {
             "token": jwt_token,
@@ -386,6 +449,7 @@ def firebase_auth(payload: FirebaseAuthRequest, db: Session = Depends(get_db)):
     try:
         db.commit()
         db.refresh(new_user)
+        assign_patient_id(new_user, db)
     except IntegrityError:
         db.rollback()
         return JSONResponse(
@@ -424,6 +488,12 @@ def record_consent(current_user: User = Depends(get_current_user), db: Session =
 @router.delete("/delete-account")
 def delete_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     fb_uid = current_user.firebase_uid
+    pid = current_user.patient_id
+
+    # Permanently retire patient ID so it can never be reused
+    if pid:
+        retire_patient_id(pid, db, reason="account_deletion")
+
     db.delete(current_user)
     db.commit()
 

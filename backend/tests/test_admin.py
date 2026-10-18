@@ -41,6 +41,20 @@ def test_admin_stats(client, admin_headers, test_user, db_session):
     assert data["models"]["svm"] >= 1
     assert "random_forest" in data["models"]
     assert data["models"]["random_forest"] >= 1
+    assert "ensemble" in data["models"]
+    assert "unique_accounts_assessed" in data["predictions"]
+    assert "unique_patients_assessed" in data["predictions"]
+    assert data["predictions"]["unique_accounts_assessed"] >= 1
+    assert "activity_trends" in data
+    assert len(data["activity_trends"]) == 14
+    assert "system_health" in data
+    assert data["system_health"]["database"]["status"] == "connected"
+    assert "data_quality" in data
+    assert data["data_quality"]["bundled_dataset_rows"] == 1025
+    assert data["data_quality"]["distinct_full_row_observations"] == 302
+    assert data["data_quality"]["original_source_rows"] == 303
+    assert "recent_activity" in data
+    assert isinstance(data["recent_activity"], list)
 
 
 def test_admin_users_and_deletion(client, admin_headers, test_user, admin_user, db_session):

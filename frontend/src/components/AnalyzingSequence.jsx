@@ -36,24 +36,16 @@ export default function AnalyzingSequence() {
   const step = STEPS[stepIndex];
 
   return (
-    <div className="glass-card p-8 flex flex-col items-center justify-center min-h-[320px] gap-6">
-      {/* Pulsing heart */}
+    <div className="glossy-card p-8 flex flex-col items-center justify-center min-h-[320px] gap-6">
+      {/* Heart indicator */}
       <div className="relative">
         <motion.div
-          animate={{ scale: [1, 1.3, 1, 1.15, 1] }}
-          transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 0.4 }}
-          className="w-20 h-20 rounded-2xl bg-crimson-500/20 border border-crimson-500/30 flex items-center justify-center"
-          style={{ boxShadow: "0 0 30px rgba(244,63,94,0.2)" }}>
-          <Heart size={32} className="text-crimson-400 fill-crimson-400"/>
+          animate={{ scale: [1, 1.08, 1, 1.04, 1] }}
+          transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.4 }}
+          className="w-20 h-20 rounded-2xl bg-[#E4EDE5] border border-[#E5E0D6] flex items-center justify-center text-[#B35D52]"
+          style={{ boxShadow: "0 10px 25px -5px rgba(53, 72, 62, 0.1)" }}>
+          <Heart size={32} className="text-[#B35D52] fill-[#B35D52]"/>
         </motion.div>
-        {/* Ripple rings */}
-        {[0,1,2].map(i => (
-          <motion.div key={i}
-            className="absolute inset-0 rounded-2xl border border-crimson-500/20"
-            animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
-            transition={{ duration: 1.5, delay: i * 0.5, repeat: Infinity, ease: "easeOut" }}
-          />
-        ))}
       </div>
 
       {/* Step text */}
@@ -66,35 +58,35 @@ export default function AnalyzingSequence() {
             transition={{ duration: 0.3 }}
             className="flex items-center gap-2 justify-center">
             <span className="text-xl">{step.icon}</span>
-            <span className="text-white font-display font-semibold">{step.text}</span>
+            <span className="text-[#35483E] font-serif font-semibold">{step.text}</span>
           </motion.div>
         </AnimatePresence>
-        <p className="text-slate-600 text-xs mt-2 font-mono">
+        <p className="text-[#52665A] text-xs mt-2 font-mono">
           Step {stepIndex + 1} of {STEPS.length}
         </p>
       </div>
 
       {/* Progress bar */}
       <div className="w-full max-w-xs">
-        <div className="h-1 rounded-full bg-slate-800 overflow-hidden">
+        <div className="h-1.5 rounded-full bg-[#E5E0D6] overflow-hidden">
           <motion.div
             className="h-full rounded-full"
-            style={{ background: "linear-gradient(90deg,#be123c,#f43f5e,#fb7185)" }}
+            style={{ background: "linear-gradient(90deg,#35483E,#52665A)" }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.1, ease: "linear" }}
           />
         </div>
-        <div className="flex justify-between text-xs text-slate-700 mt-1 font-mono">
+        <div className="flex justify-between text-xs text-[#52665A] mt-1 font-mono">
           <span>Analyzing</span>
           <span>{Math.round(progress)}%</span>
         </div>
       </div>
 
       {/* ECG line */}
-      <svg className="w-48 h-8 opacity-40" viewBox="0 0 200 30" fill="none">
+      <svg className="w-48 h-8 opacity-60" viewBox="0 0 200 30" fill="none">
         <motion.polyline
           points="0,15 30,15 40,5 50,25 60,15 80,15 95,2 105,28 115,15 130,15 140,10 150,20 160,15 200,15"
-          fill="none" stroke="#f43f5e" strokeWidth="1.5"
+          fill="none" stroke="#B35D52" strokeWidth="1.5"
           strokeLinecap="round" strokeLinejoin="round"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: [0, 1, 0] }}

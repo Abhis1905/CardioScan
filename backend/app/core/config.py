@@ -49,7 +49,14 @@ class Settings(BaseSettings):
     def cors_origins(self) -> List[str]:
         if not self.ALLOWED_ORIGINS:
             return ["*"]
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        if not self.is_production:
+            for port in [3000, 3001, 3002, 3003, 3004, 3005, 5173]:
+                for host in ["localhost", "127.0.0.1"]:
+                    origin = f"http://{host}:{port}"
+                    if origin not in origins:
+                        origins.append(origin)
+        return origins
 
     # Email
     EMAIL_PROVIDER: str = "console"  # 'resend', 'smtp', 'console', 'mock', 'disabled'
@@ -71,6 +78,11 @@ class Settings(BaseSettings):
     FIREBASE_PROJECT_ID: str = "cardioscan-app"
     FIREBASE_SERVICE_ACCOUNT_PATH: Optional[str] = None
     FIREBASE_SERVICE_ACCOUNT_JSON: Optional[str] = None
+
+    # Cloudflare Turnstile Bot Protection
+    TURNSTILE_SECRET_KEY: Optional[str] = None
+    TURNSTILE_VERIFY_URL: str = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+    TURNSTILE_TIMEOUT_SECONDS: float = 8.0
 
     # Admin Management
     ADMIN_EMAIL: str = "admin@example.com"

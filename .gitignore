@@ -39,5 +39,6 @@ serviceAccountKey.json
 # Legacy backup configs
 *legacy*
 
-
-
+# Test and verification artifacts
+scratch/
+screenshot_*.png

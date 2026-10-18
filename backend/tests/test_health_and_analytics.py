@@ -85,3 +85,18 @@ def test_get_models_list(client):
     assert "random_forest" in keys
     assert "knn" in keys
     assert "svm" in keys
+
+
+def test_get_evaluation_audit(client):
+    response = client.get("/evaluation-audit")
+    assert response.status_code == 200
+    data = response.json()
+    assert "status" in data
+    assert data["status"] == "available"
+    assert "benchmark" in data
+    assert "ensemble" in data
+    if data["benchmark"]:
+        assert "metadata" in data["benchmark"]
+        assert "results" in data["benchmark"]
+        assert data["benchmark"]["metadata"]["total_unique_rows"] == 302
+

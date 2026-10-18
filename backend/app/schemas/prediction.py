@@ -20,6 +20,7 @@ class ClinicalFeatures(BaseModel):
 
 class PredictRequest(ClinicalFeatures):
     patient_name: Optional[str] = None
+    patient_id: Optional[str] = None
     model: Optional[str] = "random_forest"
     ensemble: Optional[bool] = False
 
@@ -67,6 +68,11 @@ class WhatIfResponse(BaseModel):
 class PredictionItemResponse(BaseModel):
     id: int
     user_id: int
+    patient_name: Optional[str] = None
+    patient_id: Optional[str] = None
+    current_profile_name: Optional[str] = None
+    current_patient_id: Optional[str] = None
+    name_was_corrected: Optional[bool] = False
     age: float
     sex: int
     cp: int

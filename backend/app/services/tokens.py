@@ -40,10 +40,12 @@ def verify_email_token(raw_token: str, db: Session) -> Tuple[bool, Optional[User
     if user.verify_token_expires and datetime.utcnow() > user.verify_token_expires:
         return False, user, "Verification link has expired. Please request a new one."
 
-    # Mark as verified and invalidate token (single-use)
+    # Mark as verified, assign permanent patient ID, and invalidate token (single-use)
     user.is_verified = True
     user.verify_token_hash = None
     user.verify_token_expires = None
+    from app.services.patient_identity import assign_patient_id
+    assign_patient_id(user, db)
     db.commit()
     db.refresh(user)
 

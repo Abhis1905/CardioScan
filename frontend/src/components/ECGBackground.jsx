@@ -37,7 +37,7 @@ export default function ECGBackground() {
         const alpha = line === 1 ? 0.06 : 0.03;
 
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(244,63,94,${alpha})`;
+        ctx.strokeStyle = `rgba(138, 153, 144, ${alpha * 2.5})`;
         ctx.lineWidth = 1;
 
         for (let x = 0; x < canvas.width + 80; x += 2) {
@@ -60,7 +60,7 @@ export default function ECGBackground() {
           const dotY = y + (ecgPattern[idx] - 0.5) * 60;
 
           const grad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 8);
-          grad.addColorStop(0, "rgba(244,63,94,0.6)");
+          grad.addColorStop(0, "rgba(53, 72, 62, 0.35)");
           grad.addColorStop(1, "transparent");
           ctx.beginPath();
           ctx.fillStyle = grad;
