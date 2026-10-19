@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ArrowLeft, ShieldAlert, Cpu, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
+import { Heart, ArrowLeft, ShieldAlert, FileText, AlertTriangle } from "lucide-react";
 
 export default function TermsPage() {
   useEffect(() => {
@@ -8,15 +8,15 @@ export default function TermsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#1E293B] font-sans antialiased selection:bg-[#BE123C] selection:text-white">
+    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#17191B] text-[#1E293B] dark:text-[#F2F3F3] font-sans antialiased selection:bg-[#BE123C] selection:text-white">
       {/* ── 1. Header ──────────────────────────────────────────────────────── */}
-      <header className="border-b border-[#E7E5DF] bg-[#FAF9F6]/95 backdrop-blur-sm sticky top-0 z-30">
+      <header className="border-b border-[#E7E5DF] dark:border-[#373C40] bg-[#FAF9F6]/95 dark:bg-[#17191B]/95 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-7 h-7 rounded-lg bg-[#BE123C] text-white flex items-center justify-center transition-transform group-hover:scale-105 shadow-2xs">
               <Heart size={14} className="fill-white" />
             </div>
-            <span className="font-serif font-bold text-lg tracking-tight text-[#0F172A]">
+            <span className="font-serif font-bold text-lg tracking-tight text-[#0F172A] dark:text-[#F2F3F3]">
               Cardio<span className="text-[#BE123C]">Scan</span>
             </span>
           </Link>
@@ -24,7 +24,7 @@ export default function TermsPage() {
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#475569] hover:text-[#0F172A] px-3 py-1.5 rounded-lg hover:bg-[#F4F2EC] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#475569] dark:text-[#B2B7BB] hover:text-[#0F172A] dark:hover:text-[#F2F3F3] px-3 py-1.5 rounded-lg hover:bg-[#F4F2EC] dark:hover:bg-[#282C30] transition-colors"
             >
               <ArrowLeft size={13} />
               <span>Back to Home</span>
@@ -32,7 +32,7 @@ export default function TermsPage() {
 
             <Link
               to="/predict"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0F172A] text-white text-xs font-medium hover:bg-[#1E293B] transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0F172A] text-white text-xs font-medium hover:bg-[#1E293B] dark:bg-[#789580] dark:text-[#111315] dark:hover:bg-[#8BA792] transition-colors shadow-xs"
             >
               <span>Start Assessment</span>
             </Link>
@@ -43,25 +43,25 @@ export default function TermsPage() {
       {/* ── 2. Content ─────────────────────────────────────────────────────── */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 text-left space-y-8">
         {/* Title & Metadata */}
-        <div className="space-y-3 border-b border-[#E7E5DF] pb-6">
+        <div className="space-y-3 border-b border-[#E7E5DF] dark:border-[#373C40] pb-6">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#BE123C]/10 border border-[#BE123C]/20 text-[#BE123C] text-[11px] font-mono font-semibold tracking-wide uppercase">
             <FileText size={12} />
             <span>Legal Documentation</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-serif text-[#0F172A] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-serif text-[#0F172A] dark:text-[#F2F3F3] tracking-tight">
             Terms & Conditions
           </h1>
 
-          <p className="text-xs text-[#64748B]">
+          <p className="text-xs text-[#64748B] dark:text-[#8C9399]">
             Effective Date: October 11, 2026 · Version 1.0 (Educational Scope)
           </p>
         </div>
 
         {/* Advisory Callout */}
-        <div className="p-4 sm:p-5 rounded-xl border border-amber-200 bg-amber-50/60 text-xs text-amber-950 space-y-2">
-          <div className="flex items-center gap-2 font-bold text-amber-900">
-            <AlertTriangle size={15} className="shrink-0 text-amber-700" />
+        <div className="p-4 sm:p-5 rounded-xl border border-amber-200 bg-amber-50/60 dark:border-[#574422] dark:bg-[#2F2618] text-xs text-amber-950 dark:text-[#FEF3C7] space-y-2">
+          <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-[#FDE68A]">
+            <AlertTriangle size={15} className="shrink-0 text-amber-700 dark:text-[#FCD34D]" />
             <span>Educational Research Terms & Owner Review Required</span>
           </div>
           <p className="leading-relaxed">
@@ -71,22 +71,22 @@ export default function TermsPage() {
 
         {/* Section 1: Agreement */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             1. Agreement to Terms
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             By visiting the CardioScan website, interacting with its simulation leavers, or running cardiovascular model evaluations, you signify your agreement to these Terms & Conditions. If you do not agree with any part of these terms, you should not access or use the application.
           </p>
         </section>
 
         {/* Section 2: Non-Medical Nature */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             2. Purely Educational and Non-Medical Nature
           </h2>
-          <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 text-xs text-rose-950 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-rose-900">
-              <ShieldAlert size={15} className="text-[#BE123C]" />
+          <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 dark:border-[#5C2B32] dark:bg-[#321E22] text-xs text-rose-950 dark:text-[#FECDD3] space-y-2">
+            <div className="flex items-center gap-2 font-bold text-rose-900 dark:text-[#FCA5A5]">
+              <ShieldAlert size={15} className="text-[#BE123C] dark:text-[#F43F5E]" />
               <span>Critical Health Disclaimer</span>
             </div>
             <p className="leading-relaxed">
@@ -97,23 +97,23 @@ export default function TermsPage() {
 
         {/* Section 3: Emergency Situations */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             3. Medical Emergencies
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             Never disregard professional medical advice or delay seeking urgent medical attention because of information viewed on CardioScan. If you are experiencing symptoms of an acute myocardial infarction (heart attack), severe chest tightness, pain radiating down the left arm or jaw, unexplained breathlessness, cold sweats, or dizziness, call emergency services (such as 911 or 112) or proceed to the nearest emergency room immediately.
           </p>
         </section>
 
         {/* Section 4: Machine Learning Model Boundaries */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             4. Machine Learning Model Scope & Scientific Boundaries
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             CardioScan’s computational predictions are subject to explicit scientific boundaries:
           </p>
-          <ul className="space-y-2 text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <ul className="space-y-2 text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             <li className="flex items-start gap-2">
               <span className="text-[#BE123C] font-bold">•</span>
               <span>
@@ -137,13 +137,13 @@ export default function TermsPage() {
 
         {/* Section 5: Acceptable Use */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             5. Acceptable Use
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             You agree to use CardioScan solely for personal educational exploration, academic study, and health awareness. You agree not to:
           </p>
-          <ul className="space-y-1.5 text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <ul className="space-y-1.5 text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             <li className="flex items-start gap-2">
               <span className="text-[#BE123C] font-bold">•</span>
               <span>Deploy or use CardioScan in clinical workflows or patient care triage without regulatory authorization.</span>
@@ -161,50 +161,50 @@ export default function TermsPage() {
 
         {/* Section 6: Accounts & Passwords */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             6. User Accounts and Credentials
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             If you create an account, you are responsible for maintaining the confidentiality of your login credentials. You are responsible for all activities that occur under your authenticated session. You agree to notify us immediately of any unauthorized account access.
           </p>
         </section>
 
         {/* Section 7: Warranties & Liability */}
         <section className="space-y-3">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             7. Disclaimer of Warranties and Limitation of Liability
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             CardioScan is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis without warranties of any kind, whether express or implied, including warranties of merchantability, fitness for a particular clinical purpose, or non-infringement. In no event shall the authors, maintainers, or contributors of CardioScan be liable for any direct, indirect, incidental, special, or consequential damages arising out of your use of or reliance on the estimates produced by this educational tool.
           </p>
         </section>
 
         {/* Section 8: Inquiries */}
-        <section className="space-y-3 pt-4 border-t border-[#E7E5DF]">
-          <h2 className="text-xl font-serif font-bold text-[#0F172A]">
+        <section className="space-y-3 pt-4 border-t border-[#E7E5DF] dark:border-[#373C40]">
+          <h2 className="text-xl font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">
             8. Questions and Project Inquiries
           </h2>
-          <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#475569] dark:text-[#B2B7BB] leading-relaxed">
             For academic questions or technical feedback regarding these Terms, contact:
           </p>
-          <p className="text-xs font-mono text-[#0F172A] bg-white p-3 rounded-lg border border-[#E0DED7] inline-block">
+          <p className="text-xs font-mono text-[#0F172A] dark:text-[#F2F3F3] bg-white dark:bg-[#202326] p-3 rounded-lg border border-[#E0DED7] dark:border-[#373C40] inline-block">
             Project Contact: admin@example.com
           </p>
         </section>
       </main>
 
       {/* ── 3. Footer ──────────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#E7E5DF] bg-[#F4F2EC] py-8 px-4 sm:px-6 text-xs text-[#64748B]">
+      <footer className="border-t border-[#E7E5DF] dark:border-[#373C40] bg-[#F4F2EC] dark:bg-[#111315] py-8 px-4 sm:px-6 text-xs text-[#64748B] dark:text-[#8C9399]">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
           <div>
-            <span className="font-serif font-bold text-[#0F172A]">CardioScan</span>
+            <span className="font-serif font-bold text-[#0F172A] dark:text-[#F2F3F3]">CardioScan</span>
             <span className="mx-2">·</span>
             <span>Cardiovascular Health & ML Exploration</span>
           </div>
           <div className="flex items-center gap-4 text-[11px]">
-            <Link to="/" className="hover:text-[#0F172A] transition-colors">Home</Link>
-            <Link to="/privacy" className="hover:text-[#0F172A] transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="text-[#BE123C] font-semibold">Terms & Conditions</Link>
+            <Link to="/" className="hover:text-[#0F172A] dark:hover:text-[#F2F3F3] transition-colors">Home</Link>
+            <Link to="/privacy" className="hover:text-[#0F172A] dark:hover:text-[#F2F3F3] transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-[#BE123C] dark:text-[#D9A19A] font-semibold">Terms & Conditions</Link>
           </div>
         </div>
       </footer>

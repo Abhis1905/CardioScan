@@ -39,10 +39,10 @@ export default function NotFoundPage() {
           initial={{opacity:0, y:20}}
           animate={{opacity:1, y:0}}
           transition={{delay:0.2}}>
-          <h2 className="font-display text-2xl font-bold text-white mb-3">
+          <h2 className="font-display text-2xl font-bold text-[#35483E] dark:text-[#F2F3F3] mb-3">
             Page not found
           </h2>
-          <p className="text-slate-400 text-sm mb-8 max-w-sm mx-auto">
+          <p className="text-[#52665A] dark:text-[#B2B7BB] text-sm mb-8 max-w-sm mx-auto">
             This page doesn't exist or has been moved. Let's get your heart back on track.
           </p>
 

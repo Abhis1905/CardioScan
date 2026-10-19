@@ -31,7 +31,7 @@ export default function OnboardingTour({ onDone }) {
         initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
         className="fixed inset-0 z-50 pointer-events-none flex items-end justify-end p-6 sm:p-8">
         {/* Dim overlay */}
-        <div className="absolute inset-0 bg-[#35483E]/20 backdrop-blur-[2px] pointer-events-auto" onClick={finish}/>
+        <div className="absolute inset-0 bg-[#35483E]/20 dark:bg-black/60 backdrop-blur-[2px] pointer-events-auto" onClick={finish}/>
 
         {/* Tour card */}
         <motion.div

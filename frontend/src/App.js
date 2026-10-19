@@ -356,8 +356,8 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0]">
-        <div className="w-8 h-8 border-2 border-[#35483E]/20 border-t-[#35483E] rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0] dark:bg-[#17191B]">
+        <div className="w-8 h-8 border-2 border-[#35483E]/20 dark:border-[#373C40] border-t-[#35483E] dark:border-t-[#F2F3F3] rounded-full animate-spin" />
       </div>
     );
   }
@@ -367,11 +367,12 @@ function ProtectedRoute({ children }) {
 
 function AppInner() {
   const { user, loading } = useAuth();
+  const { dark } = useTheme();
   const location = useLocation();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0]">
-        <div className="w-8 h-8 border-2 border-[#35483E]/20 border-t-[#35483E] rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0] dark:bg-[#17191B]">
+        <div className="w-8 h-8 border-2 border-[#35483E]/20 dark:border-[#373C40] border-t-[#35483E] dark:border-t-[#F2F3F3] rounded-full animate-spin" />
       </div>
     );
   }
@@ -381,11 +382,11 @@ function AppInner() {
         position="top-right"
         toastOptions={{
           style: {
-            background: "#FFFFFF",
-            color: "#35483E",
-            border: "1px solid #E5E0D6",
+            background: dark ? "#202326" : "#FFFFFF",
+            color: dark ? "#F2F3F3" : "#35483E",
+            border: dark ? "1px solid #373C40" : "1px solid #E5E0D6",
             borderRadius: "12px",
-            boxShadow: "0 4px 14px rgba(53, 72, 62, 0.08)",
+            boxShadow: dark ? "0 4px 20px rgba(0, 0, 0, 0.4)" : "0 4px 14px rgba(53, 72, 62, 0.08)",
             fontSize: "14px",
           },
         }}

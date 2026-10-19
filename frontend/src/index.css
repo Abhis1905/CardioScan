@@ -67,6 +67,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #A3B8A6;
 }
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+.dark ::-webkit-scrollbar-thumb {
+  background: #373C40;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4B5257;
+}
 
 /* ── Typography ─────────────────────────────────────────── */
 .font-display { font-family: 'Syne', sans-serif; }

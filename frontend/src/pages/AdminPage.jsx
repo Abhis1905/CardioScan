@@ -275,19 +275,19 @@ export default function AdminPage() {
   // ── Access Denied / Unauthorized State ──
   if (isAdminAuthorized === false) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#F7F5F0] text-[#35483E] flex items-center justify-center p-6">
-        <div className="glossy-card max-w-lg w-full p-8 border border-[#E5E0D6] rounded-2xl shadow-sm text-center space-y-5">
-          <div className="w-14 h-14 rounded-2xl bg-[#FAF0EE] border border-[#F0D5D1] text-[#B35D52] mx-auto flex items-center justify-center shadow-2xs">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#F7F5F0] dark:bg-[#17191B] text-[#35483E] dark:text-[#F2F3F3] flex items-center justify-center p-6">
+        <div className="glossy-card max-w-lg w-full p-8 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl shadow-sm text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-[#FAF0EE] dark:bg-[#321E22] border border-[#F0D5D1] dark:border-[#5C2B32] text-[#B35D52] dark:text-[#FCA5A5] mx-auto flex items-center justify-center shadow-2xs">
             <ShieldAlert size={28} />
           </div>
           <div className="space-y-2">
             <span className="font-mono text-xs uppercase tracking-wider text-[#B35D52] font-semibold">
               403 FORBIDDEN · RESTRICTED ACCESS
             </span>
-            <h1 className="font-serif font-bold text-2xl text-[#35483E]">
+            <h1 className="font-serif font-bold text-2xl text-[#35483E] dark:text-[#F2F3F3]">
               {t("admin.unauthorized_title", "Administrator Privileges Required")}
             </h1>
-            <p className="text-sm text-[#52665A] leading-relaxed">
+            <p className="text-sm text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
               {t(
                 "admin.unauthorized_desc",
                 "This interface is strictly restricted to authorized CardioScan platform governance officers. Your current session does not hold administrative authorization."
@@ -309,29 +309,29 @@ export default function AdminPage() {
 
   return (
     <div className={`w-full min-h-[calc(100vh-4rem)] py-8 sm:py-12 transition-colors duration-200 selection:bg-[#E4EDE5] selection:text-[#35483E] ${
-      isDark ? "bg-[#0a0f1e] text-[#f1f5f9]" : "bg-[#F7F5F0] text-[#35483E]"
+      isDark ? "bg-[#17191B] text-[#F2F3F3]" : "bg-[#F7F5F0] text-[#35483E]"
     }`}>
       <ECGBackground />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
 
         {/* ── 1. Admin Header & Platform Governance Banner ── */}
-        <header className="glossy-card p-6 sm:p-8 border border-[#E5E0D6] shadow-sm relative overflow-hidden">
+        <header className="glossy-card p-6 sm:p-8 border border-[#E5E0D6] dark:border-[#373C40] shadow-sm relative overflow-hidden">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2.5">
-              <div className="inline-flex items-center gap-2 text-xs font-mono tracking-wider text-[#52665A] uppercase">
+              <div className="inline-flex items-center gap-2 text-xs font-mono tracking-wider text-[#52665A] dark:text-[#B2B7BB] uppercase">
                 <span className="w-2 h-2 rounded-full bg-[#2D7A58]" />
-                <span className="font-semibold text-[#35483E]">
+                <span className="font-semibold text-[#35483E] dark:text-[#F2F3F3]">
                   {t("admin.header_tag", "SYSTEM ADMINISTRATION · CLINICAL PLATFORM GOVERNANCE")}
                 </span>
-                <span className="text-[#8A9990]">·</span>
-                <span className="text-[#6B7F74]">AUDITED ENVIRONMENT</span>
+                <span className="text-[#8A9990] dark:text-[#8C9399]">·</span>
+                <span className="text-[#6B7F74] dark:text-[#8C9399]">AUDITED ENVIRONMENT</span>
               </div>
 
-              <h1 className="font-serif font-bold text-3xl sm:text-4xl text-[#35483E] tracking-tight">
+              <h1 className="font-serif font-bold text-3xl sm:text-4xl text-[#35483E] dark:text-[#F2F3F3] tracking-tight">
                 {t("admin.page_title", "Admin Governance & Telemetry")}
               </h1>
 
-              <p className="text-sm text-[#52665A] max-w-2xl leading-relaxed">
+              <p className="text-sm text-[#52665A] dark:text-[#B2B7BB] max-w-2xl leading-relaxed">
                 {t(
                   "admin.page_subtitle",
                   "Real-time platform observability, model inference telemetry across all 5 clinical classifiers, dataset integrity auditing, and secure administrative controls."
@@ -377,22 +377,22 @@ export default function AdminPage() {
           </div>
 
           {/* Session & Telemetry Status Bar */}
-          <div className="mt-5 pt-4 border-t border-[#E5E0D6] flex flex-wrap items-center justify-between gap-3 text-xs text-[#52665A]">
+          <div className="mt-5 pt-4 border-t border-[#E5E0D6] dark:border-[#373C40] flex flex-wrap items-center justify-between gap-3 text-xs text-[#52665A] dark:text-[#B2B7BB]">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-[#E5E0D6] shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 bg-white dark:bg-[#202326] px-3 py-1.5 rounded-lg border border-[#E5E0D6] dark:border-[#373C40] shadow-2xs">
                 <ShieldCheck size={13} className="text-[#2D7A58]" />
-                <span className="font-semibold text-[#35483E]">Authorized Administrator</span>
-                <span className="text-[#8A9990]">·</span>
-                <span className="font-mono text-[11px] text-[#52665A]">{user?.email}</span>
+                <span className="font-semibold text-[#35483E] dark:text-[#F2F3F3]">Authorized Administrator</span>
+                <span className="text-[#8A9990] dark:text-[#8C9399]">·</span>
+                <span className="font-mono text-[11px] text-[#52665A] dark:text-[#B2B7BB]">{user?.email}</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono bg-[#E4EDE5] text-[#35483E] border border-[#D3DFD5]">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#F2F3F3] border border-[#D3DFD5] dark:border-[#373C40]">
                 <Server size={12} className="text-[#2D7A58]" />
                 <span>Backend: FastAPI v2.0.0</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] text-[#8A9990]">
+            <div className="flex items-center gap-2 text-[11px] text-[#8A9990] dark:text-[#8C9399]">
               <Activity size={12} className="text-[#2D7A58]" />
               <span>
                 {lastRefreshed
@@ -404,7 +404,7 @@ export default function AdminPage() {
         </header>
 
         {/* ── 2. Primary Navigation Tabs ── */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E0D6] pb-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E0D6] dark:border-[#373C40] pb-3">
           {[
             { key: "governance", label: "Platform Governance", icon: TrendingUp },
             { key: "users", label: `User Directory (${users.length})`, icon: Users },
@@ -417,11 +417,11 @@ export default function AdminPage() {
               onClick={() => setActiveTab(key)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === key
-                  ? "bg-[#35483E] text-white shadow-xs border border-[#35483E]"
-                  : "bg-white text-[#52665A] hover:text-[#35483E] hover:bg-[#E4EDE5]/40 border border-[#E5E0D6] shadow-2xs"
+                  ? "bg-[#35483E] text-white shadow-xs border border-[#35483E] dark:bg-[#789580] dark:text-[#111315] dark:border-[#789580]"
+                  : "bg-white dark:bg-[#202326] text-[#52665A] dark:text-[#B2B7BB] hover:text-[#35483E] dark:hover:text-[#F2F3F3] hover:bg-[#E4EDE5]/40 dark:hover:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40] shadow-2xs"
               }`}
             >
-              <Icon size={14} className={activeTab === key ? "text-white" : "text-[#52665A]"} />
+              <Icon size={14} className={activeTab === key ? "text-white dark:text-[#111315]" : "text-[#52665A] dark:text-[#B2B7BB]"} />
               <span>{label}</span>
             </button>
           ))}
@@ -432,12 +432,12 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="glossy-card p-5 border border-[#E5E0D6] rounded-2xl h-32 animate-pulse bg-white/60" />
+                <div key={i} className="glossy-card p-5 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl h-32 animate-pulse bg-white/60 dark:bg-[#202326]/60" />
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="glossy-card p-6 border border-[#E5E0D6] rounded-2xl h-80 animate-pulse bg-white/60" />
-              <div className="glossy-card p-6 border border-[#E5E0D6] rounded-2xl h-80 animate-pulse bg-white/60" />
+              <div className="glossy-card p-6 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl h-80 animate-pulse bg-white/60 dark:bg-[#202326]/60" />
+              <div className="glossy-card p-6 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl h-80 animate-pulse bg-white/60 dark:bg-[#202326]/60" />
             </div>
           </div>
         ) : (
@@ -647,7 +647,7 @@ export default function AdminPage() {
                               <YAxis
                                 allowDecimals={false}
                                 tick={{ fontSize: 11, fill: "#6B7F74" }}
-                                axisLine={{ stroke: "#E5E0D6" }}
+                                axisLine={{ stroke: isDark ? "#373C40" : "#E5E0D6" }}
                                 tickLine={false}
                               />
                               <Tooltip
@@ -655,9 +655,9 @@ export default function AdminPage() {
                                   if (active && payload && payload.length) {
                                     const data = payload[0].payload;
                                     return (
-                                      <div className="p-2.5 bg-white border border-[#E5E0D6] rounded-xl shadow-md text-xs space-y-1">
-                                        <p className="font-mono text-[#6B7F74]">{data.date}</p>
-                                        <p className="font-serif font-bold text-[#35483E]">
+                                      <div className="p-2.5 bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl shadow-md text-xs space-y-1">
+                                        <p className="font-mono text-[#6B7F74] dark:text-[#8C9399]">{data.date}</p>
+                                        <p className="font-serif font-bold text-[#35483E] dark:text-[#F2F3F3]">
                                           {data.assessments} {data.assessments === 1 ? "assessment" : "assessments"}
                                         </p>
                                       </div>
@@ -788,18 +788,18 @@ export default function AdminPage() {
                   {/* 5 Service Status Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
                     {/* 1. Backend Service */}
-                    <div className="p-3.5 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-2">
+                    <div className="p-3.5 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-mono text-[#6B7F74]">FastAPI Host</span>
+                        <span className="text-[11px] font-mono text-[#6B7F74] dark:text-[#8C9399]">FastAPI Host</span>
                         <CheckCircle size={14} className="text-[#2D7A58]" />
                       </div>
                       <div>
-                        <p className="font-serif font-bold text-sm text-[#35483E]">API Backend</p>
-                        <p className="text-[11px] text-[#6B7F74] font-mono mt-0.5">
+                        <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">API Backend</p>
+                        <p className="text-[11px] text-[#6B7F74] dark:text-[#8C9399] font-mono mt-0.5">
                           v{stats.system_health?.backend_version || "2.0.0"} · Active
                         </p>
                       </div>
-                      <span className="text-[10px] text-[#2D7A58] bg-[#E4EDE5] px-2 py-0.5 rounded font-semibold self-start">
+                      <span className="text-[10px] text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30] px-2 py-0.5 rounded font-semibold self-start">
                         Nominal Ping
                       </span>
                     </div>
@@ -808,9 +808,9 @@ export default function AdminPage() {
                     {(() => {
                       const isDbOk = stats.system_health?.database?.status === "connected";
                       return (
-                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-2">
+                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-mono text-[#6B7F74]">Database Engine</span>
+                            <span className="text-[11px] font-mono text-[#6B7F74] dark:text-[#8C9399]">Database Engine</span>
                             {isDbOk ? (
                               <CheckCircle size={14} className="text-[#2D7A58]" />
                             ) : (
@@ -818,15 +818,15 @@ export default function AdminPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-serif font-bold text-sm text-[#35483E]">
+                            <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">
                               {stats.system_health?.database?.engine === "postgresql" ? "PostgreSQL DB" : "SQLite DB"}
                             </p>
-                            <p className="text-[11px] text-[#6B7F74] font-mono mt-0.5">
+                            <p className="text-[11px] text-[#6B7F74] dark:text-[#8C9399] font-mono mt-0.5">
                               {isDbOk ? "Connected · Pool OK" : "Connection Failed"}
                             </p>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-semibold self-start ${
-                            isDbOk ? "text-[#2D7A58] bg-[#E4EDE5]" : "text-[#B35D52] bg-[#FAF0EE]"
+                            isDbOk ? "text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30]" : "text-[#B35D52] dark:text-[#FCA5A5] bg-[#FAF0EE] dark:bg-[#321E22]"
                           }`}>
                             {isDbOk ? "Validated" : "Disconnected"}
                           </span>
@@ -839,9 +839,9 @@ export default function AdminPage() {
                       const isMlOk = stats.system_health?.ml_engine?.status === "ready";
                       const modelsLoaded = stats.system_health?.ml_engine?.models_loaded ?? 0;
                       return (
-                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-2">
+                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-mono text-[#6B7F74]">Inference Service</span>
+                            <span className="text-[11px] font-mono text-[#6B7F74] dark:text-[#8C9399]">Inference Service</span>
                             {isMlOk ? (
                               <CheckCircle size={14} className="text-[#2D7A58]" />
                             ) : (
@@ -849,13 +849,13 @@ export default function AdminPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-serif font-bold text-sm text-[#35483E]">ML Inference</p>
-                            <p className="text-[11px] text-[#6B7F74] font-mono mt-0.5">
+                            <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">ML Inference</p>
+                            <p className="text-[11px] text-[#6B7F74] dark:text-[#8C9399] font-mono mt-0.5">
                               {modelsLoaded} {modelsLoaded === 1 ? "Classifier" : "Classifiers"} Loaded
                             </p>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-semibold self-start ${
-                            isMlOk ? "text-[#2D7A58] bg-[#E4EDE5]" : "text-[#B35D52] bg-[#FAF0EE]"
+                            isMlOk ? "text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30]" : "text-[#B35D52] dark:text-[#FCA5A5] bg-[#FAF0EE] dark:bg-[#321E22]"
                           }`}>
                             {isMlOk ? "In Memory" : "Uninitialized"}
                           </span>
@@ -869,9 +869,9 @@ export default function AdminPage() {
                       const workerStatus = stats.system_health?.firebase_worker?.status;
                       const isIdle = cleanups === 0;
                       return (
-                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-2">
+                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-mono text-[#6B7F74]">Background Worker</span>
+                            <span className="text-[11px] font-mono text-[#6B7F74] dark:text-[#8C9399]">Background Worker</span>
                             {isIdle ? (
                               <CheckCircle size={14} className="text-[#2D7A58]" />
                             ) : (
@@ -879,17 +879,17 @@ export default function AdminPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-serif font-bold text-sm text-[#35483E]">Identity Worker</p>
-                            <p className="text-[11px] text-[#6B7F74] font-mono mt-0.5">
+                            <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">Identity Worker</p>
+                            <p className="text-[11px] text-[#6B7F74] dark:text-[#8C9399] font-mono mt-0.5">
                               {cleanups ?? 0} Pending Cleanups
                             </p>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-semibold self-start ${
                             isIdle
-                              ? "text-[#35483E] bg-[#E4EDE5]"
+                              ? "text-[#35483E] dark:text-[#F2F3F3] bg-[#E4EDE5] dark:bg-[#282C30]"
                               : workerStatus === "unverified"
-                              ? "text-[#52665A] bg-[#FAF8F5]"
-                              : "text-[#A36D20] bg-[#FDF6EA]"
+                              ? "text-[#52665A] dark:text-[#B2B7BB] bg-[#FAF8F5] dark:bg-[#17191B]"
+                              : "text-[#A36D20] dark:text-[#FDE68A] bg-[#FDF6EA] dark:bg-[#2F2618]"
                           }`}>
                             {isIdle ? "Queue Idle" : workerStatus === "unverified" ? "Not Monitored" : "Tasks Queued"}
                           </span>
@@ -901,9 +901,9 @@ export default function AdminPage() {
                     {(() => {
                       const isTurnstileOn = Boolean(stats.system_health?.turnstile?.enabled);
                       return (
-                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-2">
+                        <div className="p-3.5 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-mono text-[#6B7F74]">Bot Protection</span>
+                            <span className="text-[11px] font-mono text-[#6B7F74] dark:text-[#8C9399]">Bot Protection</span>
                             {isTurnstileOn ? (
                               <CheckCircle size={14} className="text-[#2D7A58]" />
                             ) : (
@@ -911,13 +911,13 @@ export default function AdminPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-serif font-bold text-sm text-[#35483E]">Cloudflare Turnstile</p>
-                            <p className="text-[11px] text-[#6B7F74] font-mono mt-0.5">
+                            <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">Cloudflare Turnstile</p>
+                            <p className="text-[11px] text-[#6B7F74] dark:text-[#8C9399] font-mono mt-0.5">
                               {isTurnstileOn ? "Challenge Active" : "Disabled in Dev"}
                             </p>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-semibold self-start ${
-                            isTurnstileOn ? "text-[#2D7A58] bg-[#E4EDE5]" : "text-[#A36D20] bg-[#FDF6EA]"
+                            isTurnstileOn ? "text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30]" : "text-[#A36D20] dark:text-[#FDE68A] bg-[#FDF6EA] dark:bg-[#2F2618]"
                           }`}>
                             {isTurnstileOn ? "Secured" : "Not Configured"}
                           </span>
@@ -955,68 +955,68 @@ export default function AdminPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Card 1: Bundled Dataset Structure */}
-                    <div className="p-4 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-3">
+                    <div className="p-4 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-3">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E]">
+                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E] dark:text-[#F2F3F3]">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#B35D52]" />
                           <span>Bundled Repository Dataset</span>
                         </div>
-                        <p className="text-xs text-[#52665A] leading-relaxed">
-                          Repository file (<code className="text-[11px] font-mono text-[#35483E] bg-[#FAF8F5] px-1 py-0.5 rounded">heart.csv</code>) contains <strong>1,025 rows</strong>, including <strong>723 exact duplicate rows</strong> ({stats.data_quality?.bundled_duplicate_pct ?? 70.5}% duplicate rate from replication across multiple cohorts).
+                        <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
+                          Repository file (<code className="text-[11px] font-mono text-[#35483E] dark:text-[#F2F3F3] bg-[#FAF8F5] dark:bg-[#17191B] px-1 py-0.5 rounded">heart.csv</code>) contains <strong>1,025 rows</strong>, including <strong>723 exact duplicate rows</strong> ({stats.data_quality?.bundled_duplicate_pct ?? 70.5}% duplicate rate from replication across multiple cohorts).
                         </p>
                       </div>
-                      <div className="text-[11px] font-mono text-[#8A9990] pt-2 border-t border-[#E5E0D6]">
+                      <div className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399] pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                         1,025 Rows · 723 Duplicates (70.5%)
                       </div>
                     </div>
 
                     {/* Card 2: Distinct Row Observations */}
-                    <div className="p-4 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-3">
+                    <div className="p-4 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-3">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E]">
+                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E] dark:text-[#F2F3F3]">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#A36D20]" />
                           <span>Distinct Feature Records</span>
                         </div>
-                        <p className="text-xs text-[#52665A] leading-relaxed">
+                        <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                           Deduplication yields <strong>302 distinct full-row observations</strong> across all 13 clinical features.
                         </p>
-                        <div className="p-2 rounded-lg bg-[#FDF6EA] border border-[#F5E6CA] text-[11px] text-[#A36D20] leading-snug">
+                        <div className="p-2 rounded-lg bg-[#FDF6EA] dark:bg-[#282C30] border border-[#F5E6CA] dark:border-[#373C40] text-[11px] text-[#A36D20] dark:text-[#FDE68A] leading-snug">
                           <strong>Note:</strong> Distinct rows represent unique biomarker configurations, not independently verified biological patients. Do not label distinct rows as unique patients.
                         </div>
                       </div>
-                      <div className="text-[11px] font-mono text-[#8A9990] pt-2 border-t border-[#E5E0D6]">
+                      <div className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399] pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                         302 Unique Observation Patterns
                       </div>
                     </div>
 
                     {/* Card 3: 1988 UCI Cleveland Provenance & Pipeline */}
-                    <div className="p-4 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-3">
+                    <div className="p-4 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-3">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E]">
+                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E] dark:text-[#F2F3F3]">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#2D7A58]" />
                           <span>UCI 1988 Source & CV</span>
                         </div>
-                        <p className="text-xs text-[#52665A] leading-relaxed">
-                          Traced to 1988 UCI Cleveland cohort (<strong>303 raw rows</strong>, with 1 duplicate: row index 164 duplicates row 0). Evaluated via <strong>5-Fold Stratified CV</strong> with <code className="text-[11px] font-mono text-[#35483E] bg-[#FAF8F5] px-1 py-0.5 rounded">StandardScaler</code> isolated within Pipeline training folds (~82.5% AUC).
+                        <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
+                          Traced to 1988 UCI Cleveland cohort (<strong>303 raw rows</strong>, with 1 duplicate: row index 164 duplicates row 0). Evaluated via <strong>5-Fold Stratified CV</strong> with <code className="text-[11px] font-mono text-[#35483E] dark:text-[#F2F3F3] bg-[#FAF8F5] dark:bg-[#17191B] px-1 py-0.5 rounded">StandardScaler</code> isolated within Pipeline training folds (~82.5% AUC).
                         </p>
                       </div>
-                      <div className="text-[11px] font-mono text-[#8A9990] pt-2 border-t border-[#E5E0D6]">
+                      <div className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399] pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                         UCI Cleveland 1988 · Leakage-Safe
                       </div>
                     </div>
 
                     {/* Card 4: Regulatory & Clinical Boundary */}
-                    <div className="p-4 rounded-xl border border-[#E5E0D6] bg-white flex flex-col justify-between space-y-3">
+                    <div className="p-4 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#202326] flex flex-col justify-between space-y-3">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#52665A]" />
+                        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#35483E] dark:text-[#F2F3F3]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#52665A] dark:text-[#B2B7BB]" />
                           <span>Regulatory Boundary Limits</span>
                         </div>
-                        <p className="text-xs text-[#52665A] leading-relaxed">
+                        <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                           CardioScan operates as an educational ML decision-support benchmark. It is <strong>not FDA/CE cleared as a diagnostic device</strong>, not a HIPAA-covered entity, and does not provide clinical diagnoses.
                         </p>
                       </div>
-                      <div className="text-[11px] font-mono text-[#8A9990] pt-2 border-t border-[#E5E0D6]">
+                      <div className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399] pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                         Educational & Screening Scope Only
                       </div>
                     </div>
@@ -1159,42 +1159,42 @@ export default function AdminPage() {
                       filteredUsers.map((u) => (
                         <div
                           key={u.id}
-                          className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAF8F5] transition-colors"
+                          className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAF8F5] dark:hover:bg-[#282C30] transition-colors"
                         >
                           <div className="flex items-center gap-3.5 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-[#E4EDE5] border border-[#D3DFD5] text-[#35483E] flex items-center justify-center font-bold text-sm shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-[#E4EDE5] dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] text-[#35483E] dark:text-[#F2F3F3] flex items-center justify-center font-bold text-sm shrink-0">
                               {(u.name?.[0] || u.email?.[0] || "U").toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-serif font-bold text-sm text-[#35483E] truncate">{u.name}</p>
+                                <p className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3] truncate">{u.name}</p>
                                 {u.patient_id && (
-                                  <span className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-[#E5E0D6] text-[#52665A]">
+                                  <span className="font-mono text-[10px] bg-white dark:bg-[#202326] px-1.5 py-0.5 rounded border border-[#E5E0D6] dark:border-[#373C40] text-[#52665A] dark:text-[#B2B7BB]">
                                     {u.patient_id}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs font-mono text-[#6B7F74] truncate">{u.email}</p>
+                              <p className="text-xs font-mono text-[#6B7F74] dark:text-[#8C9399] truncate">{u.email}</p>
                             </div>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-center">
                             {u.is_verified ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#E4EDE5] text-[#2D7A58] border border-[#D3DFD5]">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#E4EDE5] dark:bg-[#282C30] text-[#2D7A58] dark:text-[#789580] border border-[#D3DFD5] dark:border-[#373C40]">
                                 <Check size={12} />
                                 <span>Verified</span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#FAF0EE] text-[#B35D52] border border-[#F0D5D1]">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#FAF0EE] dark:bg-[#321E22] text-[#B35D52] dark:text-[#FCA5A5] border border-[#F0D5D1] dark:border-[#5C2B32]">
                                 <span>Pending Verification</span>
                               </span>
                             )}
 
-                            <span className="font-mono text-xs text-[#52665A] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#E5E0D6]">
+                            <span className="font-mono text-xs text-[#52665A] dark:text-[#B2B7BB] bg-[#FAF8F5] dark:bg-[#282C30] px-2.5 py-1 rounded-lg border border-[#E5E0D6] dark:border-[#373C40]">
                               {u.prediction_count ?? 0} {u.prediction_count === 1 ? "assessment" : "assessments"}
                             </span>
 
-                            <span className="text-xs text-[#8A9990] font-mono">
+                            <span className="text-xs text-[#8A9990] dark:text-[#8C9399] font-mono">
                               {u.created_at ? new Date(u.created_at).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : ""}
                             </span>
 
@@ -1202,7 +1202,7 @@ export default function AdminPage() {
                               type="button"
                               data-action="delete-user"
                               onClick={() => setPendingDeleteUser(u)}
-                              className="p-1.5 rounded-lg text-[#8A9990] hover:text-[#B35D52] hover:bg-[#FAF0EE] transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg text-[#8A9990] dark:text-[#8C9399] hover:text-[#B35D52] dark:hover:text-[#FCA5A5] hover:bg-[#FAF0EE] dark:hover:bg-[#321E22] transition-all cursor-pointer"
                               title="Delete account"
                             >
                               <Trash2 size={14} />
@@ -1271,13 +1271,13 @@ export default function AdminPage() {
                 </div>
 
                 {/* Records Card */}
-                <div className="glossy-card border border-[#E5E0D6] rounded-2xl shadow-sm overflow-hidden">
-                  <div className="p-4 sm:p-5 border-b border-[#E5E0D6] flex items-center justify-between">
+                <div className="glossy-card border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-4 sm:p-5 border-b border-[#E5E0D6] dark:border-[#373C40] flex items-center justify-between">
                     <div>
-                      <h3 className="font-serif font-bold text-base text-[#35483E]">
+                      <h3 className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">
                         Historical Assessment Evaluations ({filteredPredictions.length})
                       </h3>
-                      <p className="text-xs text-[#6B7F74]">
+                      <p className="text-xs text-[#6B7F74] dark:text-[#8C9399]">
                         Audited assessment log with model selection, classified risk, and computed risk probability.
                       </p>
                     </div>
@@ -1286,7 +1286,7 @@ export default function AdminPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-[#E5E0D6] text-[11px] font-mono uppercase tracking-wider text-[#6B7F74] bg-[#FAF8F5]">
+                        <tr className="border-b border-[#E5E0D6] dark:border-[#373C40] text-[11px] font-mono uppercase tracking-wider text-[#6B7F74] dark:text-[#8C9399] bg-[#FAF8F5] dark:bg-[#17191B]">
                           <th className="py-3 px-4">Evaluation ID</th>
                           <th className="py-3 px-4">Account Reference</th>
                           <th className="py-3 px-4">Model Architecture</th>
@@ -1296,10 +1296,10 @@ export default function AdminPage() {
                           <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E5E0D6]/60">
+                      <tbody className="divide-y divide-[#E5E0D6]/60 dark:divide-[#373C40]">
                         {filteredPredictions.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="py-8 text-center text-xs text-[#8A9990]">
+                            <td colSpan={7} className="py-8 text-center text-xs text-[#8A9990] dark:text-[#8C9399]">
                               No assessment records match your filter criteria.
                             </td>
                           </tr>
@@ -1307,24 +1307,24 @@ export default function AdminPage() {
                           filteredPredictions.map((p) => {
                             const badgeColor =
                               p.risk_level === "High"
-                                ? "bg-[#FAF0EE] text-[#B35D52] border-[#F0D5D1]"
+                                ? "bg-[#FAF0EE] dark:bg-[#321E22] text-[#B35D52] dark:text-[#FCA5A5] border-[#F0D5D1] dark:border-[#5C2B32]"
                                 : p.risk_level === "Moderate"
-                                ? "bg-[#FDF6EA] text-[#A36D20] border-[#F5E6CA]"
-                                : "bg-[#E4EDE5] text-[#2D7A58] border-[#D3DFD5]";
+                                ? "bg-[#FDF6EA] dark:bg-[#2F2618] text-[#A36D20] dark:text-[#FDE68A] border-[#F5E6CA] dark:border-[#574422]"
+                                : "bg-[#E4EDE5] dark:bg-[#282C30] text-[#2D7A58] dark:text-[#789580] border-[#D3DFD5] dark:border-[#373C40]";
 
                             return (
-                              <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors">
-                                <td className="py-3 px-4 font-mono font-bold text-[#35483E]">
+                              <tr key={p.id} className="hover:bg-[#FAF8F5] dark:hover:bg-[#282C30] transition-colors">
+                                <td className="py-3 px-4 font-mono font-bold text-[#35483E] dark:text-[#F2F3F3]">
                                   EV-{String(p.id).padStart(5, "0")}
                                 </td>
                                 <td className="py-3 px-4">
                                   <div>
-                                    <p className="font-medium text-[#35483E]">{p.user_name || "Anonymous Account"}</p>
-                                    <p className="font-mono text-[11px] text-[#8A9990]">{p.user_email || "N/A"}</p>
+                                    <p className="font-medium text-[#35483E] dark:text-[#F2F3F3]">{p.user_name || "Anonymous Account"}</p>
+                                    <p className="font-mono text-[11px] text-[#8A9990] dark:text-[#8C9399]">{p.user_email || "N/A"}</p>
                                   </div>
                                 </td>
                                 <td className="py-3 px-4">
-                                  <span className="font-medium text-[#35483E] capitalize">
+                                  <span className="font-medium text-[#35483E] dark:text-[#F2F3F3] capitalize">
                                     {p.model_used.replace(/_/g, " ")}
                                   </span>
                                 </td>
@@ -1333,12 +1333,12 @@ export default function AdminPage() {
                                     {p.risk_level}
                                   </span>
                                 </td>
-                                <td className="py-3 px-4 font-mono text-[#35483E]">
+                                <td className="py-3 px-4 font-mono text-[#35483E] dark:text-[#F2F3F3]">
                                   {p.probability !== undefined && p.probability !== null
                                     ? `${(p.probability * 100).toFixed(1)}%`
                                     : "N/A"}
                                 </td>
-                                <td className="py-3 px-4 font-mono text-[#8A9990]">
+                                <td className="py-3 px-4 font-mono text-[#8A9990] dark:text-[#8C9399]">
                                   {p.created_at ? new Date(p.created_at).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : ""}
                                 </td>
                                 <td className="py-3 px-4 text-right">
@@ -1346,7 +1346,7 @@ export default function AdminPage() {
                                     type="button"
                                     data-action="delete-prediction"
                                     onClick={() => setPendingDeletePred(p)}
-                                    className="p-1.5 rounded-lg text-[#8A9990] hover:text-[#B35D52] hover:bg-[#FAF0EE] transition-all cursor-pointer"
+                                    className="p-1.5 rounded-lg text-[#8A9990] dark:text-[#8C9399] hover:text-[#B35D52] dark:hover:text-[#FCA5A5] hover:bg-[#FAF0EE] dark:hover:bg-[#321E22] transition-all cursor-pointer"
                                     title="Delete prediction"
                                   >
                                     <Trash2 size={13} />
@@ -1368,28 +1368,28 @@ export default function AdminPage() {
         {/* ── Double Confirmation Modal for User Deletion ── */}
         {pendingDeleteUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-            <div className="glossy-card max-w-md w-full p-6 border border-[#E5E0D6] rounded-2xl shadow-xl space-y-4">
-              <div className="flex items-center gap-3 text-[#B35D52]">
-                <div className="w-9 h-9 rounded-xl bg-[#FAF0EE] border border-[#F0D5D1] flex items-center justify-center">
+            <div className="glossy-card max-w-md w-full p-6 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl shadow-xl space-y-4">
+              <div className="flex items-center gap-3 text-[#B35D52] dark:text-[#FCA5A5]">
+                <div className="w-9 h-9 rounded-xl bg-[#FAF0EE] dark:bg-[#321E22] border border-[#F0D5D1] dark:border-[#5C2B32] flex items-center justify-center">
                   <AlertCircle size={20} />
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-base text-[#35483E]">Confirm User Account Deletion</h3>
-                  <p className="text-xs text-[#6B7F74]">Irreversible administrative action</p>
+                  <h3 className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">Confirm User Account Deletion</h3>
+                  <p className="text-xs text-[#6B7F74] dark:text-[#8C9399]">Irreversible administrative action</p>
                 </div>
               </div>
 
-              <p className="text-xs text-[#52665A] leading-relaxed">
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 Are you sure you want to delete the user account for <strong>{pendingDeleteUser.name}</strong> (
                 <code>{pendingDeleteUser.email}</code>)? This will cascade and permanently delete all associated assessment records, clinical baseline metrics, and identity tokens.
               </p>
 
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-[#E5E0D6]">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                 <button
                   type="button"
                   onClick={() => setPendingDeleteUser(null)}
                   disabled={deletingInProgress}
-                  className="glossy-btn-secondary px-4 py-2 rounded-xl text-xs font-medium text-[#52665A] cursor-pointer"
+                  className="glossy-btn-secondary px-4 py-2 rounded-xl text-xs font-medium text-[#52665A] dark:text-[#B2B7BB] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1409,27 +1409,27 @@ export default function AdminPage() {
         {/* ── Double Confirmation Modal for Prediction Deletion ── */}
         {pendingDeletePred && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-            <div className="glossy-card max-w-md w-full p-6 border border-[#E5E0D6] rounded-2xl shadow-xl space-y-4">
-              <div className="flex items-center gap-3 text-[#B35D52]">
-                <div className="w-9 h-9 rounded-xl bg-[#FAF0EE] border border-[#F0D5D1] flex items-center justify-center">
+            <div className="glossy-card max-w-md w-full p-6 border border-[#E5E0D6] dark:border-[#373C40] rounded-2xl shadow-xl space-y-4">
+              <div className="flex items-center gap-3 text-[#B35D52] dark:text-[#FCA5A5]">
+                <div className="w-9 h-9 rounded-xl bg-[#FAF0EE] dark:bg-[#321E22] border border-[#F0D5D1] dark:border-[#5C2B32] flex items-center justify-center">
                   <AlertCircle size={20} />
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-base text-[#35483E]">Remove Assessment Record</h3>
-                  <p className="text-xs text-[#6B7F74]">Audit log modification</p>
+                  <h3 className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">Remove Assessment Record</h3>
+                  <p className="text-xs text-[#6B7F74] dark:text-[#8C9399]">Audit log modification</p>
                 </div>
               </div>
 
-              <p className="text-xs text-[#52665A] leading-relaxed">
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 Remove assessment evaluation <strong>EV-{String(pendingDeletePred.id).padStart(5, "0")}</strong> ({pendingDeletePred.model_used}, {pendingDeletePred.risk_level} risk)?
               </p>
 
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-[#E5E0D6]">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                 <button
                   type="button"
                   onClick={() => setPendingDeletePred(null)}
                   disabled={deletingInProgress}
-                  className="glossy-btn-secondary px-4 py-2 rounded-xl text-xs font-medium text-[#52665A] cursor-pointer"
+                  className="glossy-btn-secondary px-4 py-2 rounded-xl text-xs font-medium text-[#52665A] dark:text-[#B2B7BB] cursor-pointer"
                 >
                   Cancel
                 </button>

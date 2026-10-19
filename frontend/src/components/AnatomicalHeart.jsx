@@ -411,8 +411,8 @@ export default function AnatomicalHeart({ className = "" }) {
               onMouseEnter={() => setActiveRegionId(region.id)}
               className={`px-3 py-1.5 rounded-lg text-xs sm:text-[13px] font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#BE123C]/50 ${
                 isActive
-                  ? "bg-[#0F172A] text-white shadow-xs font-semibold"
-                  : "bg-[#FAF9F6] text-[#334155] border border-[#E2DFD6] hover:bg-[#F4F2EC] hover:text-[#0F172A]"
+                  ? "bg-[#0F172A] text-white shadow-xs font-semibold dark:bg-[#789580] dark:text-[#111315]"
+                  : "bg-[#FAF9F6] text-[#334155] border border-[#E2DFD6] hover:bg-[#F4F2EC] hover:text-[#0F172A] dark:bg-[#202326] dark:border-[#373C40] dark:text-[#B2B7BB] dark:hover:bg-[#282C30] dark:hover:text-[#F2F3F3]"
               }`}
             >
               <span
@@ -427,7 +427,7 @@ export default function AnatomicalHeart({ className = "" }) {
 
       {/* ── 10. Integrated Explanation Panel ──────────────────────────────── */}
       <div
-        className="w-full mt-3.5 p-3.5 sm:p-4 rounded-xl border border-[#E2DFD6] bg-[#FAF9F6] text-start transition-all duration-200"
+        className="w-full mt-3.5 p-3.5 sm:p-4 rounded-xl border border-[#E2DFD6] dark:border-[#373C40] bg-[#FAF9F6] dark:bg-[#202326] text-start transition-all duration-200"
         role="region"
         aria-live="polite"
         aria-label={`Explanation for ${currentRegion.name}`}
@@ -438,13 +438,13 @@ export default function AnatomicalHeart({ className = "" }) {
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: currentRegion.dotColor }}
             />
-            <h4 className="text-sm font-bold text-[#0F172A]">{currentRegion.name}</h4>
+            <h4 className="text-sm font-bold text-[#0F172A] dark:text-[#F2F3F3]">{currentRegion.name}</h4>
           </div>
-          <span className="text-xs font-mono text-[#64748B]">
+          <span className="text-xs font-mono text-[#64748B] dark:text-[#8C9399]">
             {t("landing.heart.interactive_area", "Interactive Area")}
           </span>
         </div>
-        <p className="text-sm text-[#334155] leading-relaxed">
+        <p className="text-sm text-[#334155] dark:text-[#B2B7BB] leading-relaxed">
           {currentRegion.explanation}
         </p>
       </div>
