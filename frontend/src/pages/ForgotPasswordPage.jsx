@@ -221,11 +221,11 @@ export default function ForgotPasswordPage() {
             </p>
 
             {/* Email Pill Badge */}
-            <div className="font-mono font-semibold text-xs sm:text-sm text-[#35483E] bg-[#FAF8F5] border border-[#E5E0D6] px-3.5 py-1.5 rounded-lg inline-block my-3 break-all shadow-2xs">
+            <div className="font-mono font-semibold text-xs sm:text-sm text-[#35483E] dark:text-[#F2F3F3] bg-[#FAF8F5] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] px-3.5 py-1.5 rounded-lg inline-block my-3 break-all shadow-2xs">
               {sentEmail || email}
             </div>
 
-            <p className="text-xs text-[#52665A] mb-6 leading-relaxed max-w-xs mx-auto">
+            <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] mb-6 leading-relaxed max-w-xs mx-auto">
               {t(
                 "auth.reset_email_instruction",
                 "Click the link in the email to reset your password. Check your spam folder if you do not see it within a few minutes."
@@ -248,7 +248,7 @@ export default function ForgotPasswordPage() {
                   setSent(false);
                   setEmail("");
                 }}
-                className="w-full h-10 rounded-xl glossy-btn-secondary text-[#35483E] text-xs font-semibold cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[#35483E]/20"
+                className="w-full h-10 rounded-xl glossy-btn-secondary text-[#35483E] dark:text-[#F2F3F3] text-xs font-semibold cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[#35483E]/20"
               >
                 <span>{t("auth.request_new_link", "Request a new reset link")}</span>
               </button>
@@ -315,14 +315,14 @@ export default function ForgotPasswordPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.email", "Email")}
                 </label>
                 <div className="relative group">
                   <Mail
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="email"
@@ -334,7 +334,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                 </div>
               </div>

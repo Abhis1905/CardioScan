@@ -5,16 +5,16 @@ const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("cardioscan-theme");
-    if (saved) return saved === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return saved === "dark";
   });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", dark);
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
     localStorage.setItem("cardioscan-theme", dark ? "dark" : "light");
     if (dark) {
-      document.body.style.background = "#141D18";
+      document.body.style.background = "#17191B";
     } else {
       document.body.style.background = "#F7F5F0";
     }

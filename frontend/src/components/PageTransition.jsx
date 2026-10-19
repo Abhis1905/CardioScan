@@ -113,17 +113,11 @@ export default function PageTransition({ children }) {
     }
   }, [location.pathname]);
 
-  const isSageIvoryRoute =
-    SAGE_IVORY_ROUTES.includes(location.pathname) ||
-    location.pathname.startsWith("/profile") ||
-    location.pathname.startsWith("/predict") ||
-    location.pathname.startsWith("/metrics");
-
   return (
     <div
       className="relative w-full min-h-screen"
       style={{
-        backgroundColor: isDark ? "#141D18" : (isSageIvoryRoute ? "#F7F5F0" : "#f1f5f9"),
+        backgroundColor: isDark ? "#17191B" : "#F7F5F0",
         overflowX: "clip",
       }}
     >
@@ -132,10 +126,8 @@ export default function PageTransition({ children }) {
         className="fixed inset-0 pointer-events-none -z-10 transition-opacity duration-700"
         style={{
           background: isDark
-            ? "radial-gradient(ellipse 85% 65% at 50% 12%, rgba(53, 72, 62, 0.3) 0%, rgba(20, 29, 24, 0) 80%), #141D18"
-            : isSageIvoryRoute
-            ? "radial-gradient(ellipse 85% 65% at 50% 12%, rgba(228, 237, 229, 0.55) 0%, rgba(247, 245, 240, 0) 80%), #F7F5F0"
-            : "radial-gradient(ellipse 85% 65% at 50% 12%, rgba(241, 245, 249, 0.9) 0%, rgba(255, 255, 255, 0) 80%), #f1f5f9",
+            ? "radial-gradient(ellipse 85% 65% at 50% 12%, rgba(120, 149, 128, 0.07) 0%, rgba(23, 25, 27, 0) 80%), #17191B"
+            : "radial-gradient(ellipse 85% 65% at 50% 12%, rgba(228, 237, 229, 0.55) 0%, rgba(247, 245, 240, 0) 80%), #F7F5F0",
         }}
         aria-hidden="true"
       />

@@ -382,14 +382,14 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.email", "Email")}
                 </label>
                 <div className="relative group">
                   <Mail
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="email"
@@ -401,7 +401,7 @@ export default function LoginPage() {
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                 </div>
               </div>
@@ -411,13 +411,13 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="password"
-                    className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                    className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                   >
                     {t("auth.password", "Password")}
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-semibold text-[#52665A] hover:text-[#35483E] transition-colors underline-offset-4 hover:underline focus:outline-none focus:ring-1 focus:ring-[#35483E] rounded"
+                    className="text-xs font-semibold text-[#52665A] dark:text-[#B2B7BB] hover:text-[#35483E] dark:hover:text-[#F2F3F3] transition-colors underline-offset-4 hover:underline focus:outline-none focus:ring-1 focus:ring-[#35483E] dark:focus:ring-[#789580] rounded"
                   >
                     {t("auth.forgot_password", "Forgot password?")}
                   </Link>
@@ -425,7 +425,7 @@ export default function LoginPage() {
                 <div className="relative group">
                   <Lock
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="password"
@@ -437,13 +437,13 @@ export default function LoginPage() {
                     value={form.password}
                     onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? t("auth.hide_password", "Hide password") : t("auth.show_password", "Show password")}
-                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] hover:text-[#35483E] hover:bg-[#E4EDE5]/60 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E]"
+                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] hover:text-[#35483E] dark:hover:text-[#F2F3F3] hover:bg-[#E4EDE5]/60 dark:hover:bg-[#282C30] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E] dark:focus:ring-[#789580]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -470,14 +470,14 @@ export default function LoginPage() {
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
                   required
-                  className="mt-0.5 h-4 w-4 rounded border-[#E5E0D6] text-[#35483E] focus:ring-[#35483E]/25 cursor-pointer accent-[#35483E]"
+                  className="mt-0.5 h-4 w-4 rounded border-[#E5E0D6] dark:border-[#373C40] text-[#35483E] dark:text-[#789580] dark:bg-[#202326] focus:ring-[#35483E]/25 dark:focus:ring-[#789580]/30 cursor-pointer accent-[#35483E] dark:accent-[#789580]"
                 />
-                <label htmlFor="agreeTerms" className="text-xs text-[#52665A] leading-snug cursor-pointer select-none">
+                <label htmlFor="agreeTerms" className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-snug cursor-pointer select-none">
                   {t("auth.agree_terms_prefix", "I agree to the")}{" "}
                   <Link
                     to="/terms"
                     target="_blank"
-                    className="text-[#35483E] font-medium underline underline-offset-2 decoration-[#C5D5C8] hover:decoration-[#35483E] hover:text-[#24332B] transition-colors"
+                    className="text-[#35483E] dark:text-[#F2F3F3] font-medium underline underline-offset-2 decoration-[#C5D5C8] dark:decoration-[#373C40] hover:decoration-[#35483E] dark:hover:decoration-[#789580] hover:text-[#24332B] dark:hover:text-[#FFFFFF] transition-colors"
                   >
                     {t("auth.terms_and_conditions", "Terms & Conditions")}
                   </Link>{" "}
@@ -485,7 +485,7 @@ export default function LoginPage() {
                   <Link
                     to="/privacy"
                     target="_blank"
-                    className="text-[#35483E] font-medium underline underline-offset-2 decoration-[#C5D5C8] hover:decoration-[#35483E] hover:text-[#24332B] transition-colors"
+                    className="text-[#35483E] dark:text-[#F2F3F3] font-medium underline underline-offset-2 decoration-[#C5D5C8] dark:decoration-[#373C40] hover:decoration-[#35483E] dark:hover:decoration-[#789580] hover:text-[#24332B] dark:hover:text-[#FFFFFF] transition-colors"
                   >
                     {t("auth.privacy_policy", "Privacy Policy")}
                   </Link>
@@ -521,9 +521,9 @@ export default function LoginPage() {
             {/* Separator Divider */}
             <div className="relative my-5 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E5E0D6]"></div>
+                <div className="w-full border-t border-[#E5E0D6] dark:border-[#373C40]"></div>
               </div>
-              <span className="relative bg-[#FAF8F5] border border-[#E5E0D6] rounded-full px-3 py-0.5 text-[11px] font-mono uppercase tracking-widest text-[#52665A] font-semibold">
+              <span className="relative bg-[#FAF8F5] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-full px-3 py-0.5 text-[11px] font-mono uppercase tracking-widest text-[#52665A] dark:text-[#8C9399] font-semibold">
                 {t("auth.or_divider", "or")}
               </span>
             </div>
@@ -533,14 +533,14 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading || googleLoading || !turnstileToken || !agreeTerms}
-              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl glossy-btn-secondary text-[#35483E] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#35483E]/20"
+              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl glossy-btn-secondary text-[#35483E] dark:text-[#F2F3F3] text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#35483E]/20"
             >
               {googleLoading ? (
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                    className="w-4 h-4 border-2 border-[#35483E]/25 border-t-[#35483E] rounded-full shrink-0"
+                    className="w-4 h-4 border-2 border-[#35483E]/25 dark:border-[#F2F3F3]/25 border-t-[#35483E] dark:border-t-[#F2F3F3] rounded-full shrink-0"
                   />
                   <span>{t("auth.connecting", "Connecting...")}</span>
                 </>
@@ -570,12 +570,12 @@ export default function LoginPage() {
             </button>
 
             {/* Registration Navigation Link */}
-            <div className="mt-6 pt-5 border-t border-[#E5E0D6] text-center">
-              <p className="text-xs sm:text-sm text-[#52665A]">
+            <div className="mt-6 pt-5 border-t border-[#E5E0D6] dark:border-[#373C40] text-center">
+              <p className="text-xs sm:text-sm text-[#52665A] dark:text-[#B2B7BB]">
                 {t("auth.no_account", "Don't have an account?")}{" "}
                 <Link
                   to="/register"
-                  className="font-semibold text-[#35483E] hover:text-[#1E2B24] underline underline-offset-4 decoration-[#C5D5C8] hover:decoration-[#35483E] transition-colors"
+                  className="font-semibold text-[#35483E] dark:text-[#F2F3F3] hover:text-[#1E2B24] dark:hover:text-[#FFFFFF] underline underline-offset-4 decoration-[#C5D5C8] dark:decoration-[#373C40] hover:decoration-[#35483E] dark:hover:decoration-[#789580] transition-colors"
                 >
                   {t("auth.sign_up", "Sign up")}
                 </Link>

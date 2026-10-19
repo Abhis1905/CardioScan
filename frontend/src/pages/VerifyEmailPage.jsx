@@ -824,12 +824,12 @@ export default function VerifyEmailPage() {
                 <div>
                   <label
                     htmlFor="verify-email-input"
-                    className="block text-xs font-bold text-[#35483E] uppercase tracking-wider mb-2"
+                    className="block text-xs font-bold text-[#35483E] dark:text-[#F2F3F3] uppercase tracking-wider mb-2"
                   >
                     {t("auth.enter_registered_email", "Registered Email")}
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-[#52665A]/60">
+                    <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-[#52665A]/60 dark:text-[#8C9399]">
                       <Mail size={16} />
                     </div>
                     <input
@@ -840,7 +840,7 @@ export default function VerifyEmailPage() {
                       placeholder={t("auth.email_placeholder", "name@example.com")}
                       required
                       autoComplete="email"
-                      className="glossy-input w-full ps-10 pe-4 py-2.5 rounded-xl text-sm"
+                      className="glossy-input w-full ps-10 pe-4 py-2.5 rounded-xl text-sm text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                     />
                   </div>
                 </div>

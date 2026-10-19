@@ -378,12 +378,12 @@ export default function RegisterPage() {
                 : t("auth.sent_verification_link", "We sent a verification link to:")}
             </p>
 
-            <div className="inline-flex items-center gap-2 font-mono font-semibold text-xs sm:text-sm text-[#35483E] bg-[#F7F5F0] border border-[#E5E0D6] px-3.5 py-1.5 rounded-xl my-3 break-all shadow-2xs max-w-full">
-              <Mail size={14} className="text-[#52665A] shrink-0" />
+            <div className="inline-flex items-center gap-2 font-mono font-semibold text-xs sm:text-sm text-[#35483E] dark:text-[#F2F3F3] bg-[#F7F5F0] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] px-3.5 py-1.5 rounded-xl my-3 break-all shadow-2xs max-w-full">
+              <Mail size={14} className="text-[#52665A] dark:text-[#8C9399] shrink-0" />
               <span className="truncate">{registeredEmail}</span>
             </div>
 
-            <p className="text-xs text-[#52665A] mb-6 leading-relaxed">
+            <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] mb-6 leading-relaxed">
               {emailSendFailed
                 ? t(
                     "auth.account_created_resend_prompt",
@@ -410,11 +410,11 @@ export default function RegisterPage() {
                 id="register-resend-btn"
                 onClick={handleResend}
                 disabled={resending || cooldown > 0}
-                className="glossy-btn-secondary w-full flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl font-medium transition-all shadow-xs cursor-pointer text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed text-[#35483E]"
+                className="glossy-btn-secondary w-full flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl font-medium transition-all shadow-xs cursor-pointer text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed text-[#35483E] dark:text-[#F2F3F3]"
               >
                 {resending ? (
                   <>
-                    <RefreshCw size={14} className="animate-spin text-[#35483E]" />
+                    <RefreshCw size={14} className="animate-spin text-[#35483E] dark:text-[#F2F3F3]" />
                     <span>{t("auth.sending", "Sending...")}</span>
                   </>
                 ) : cooldown > 0 ? (
@@ -432,14 +432,14 @@ export default function RegisterPage() {
             </div>
 
             {/* Notice and Return Link */}
-            <div className="mt-5 pt-4 border-t border-[#E5E0D6] text-center space-y-2">
-              <p className="text-[11px] text-[#52665A]/80 leading-relaxed">
+            <div className="mt-5 pt-4 border-t border-[#E5E0D6] dark:border-[#373C40] text-center space-y-2">
+              <p className="text-[11px] text-[#52665A]/80 dark:text-[#8C9399] leading-relaxed">
                 {t("auth.check_spam_notice", "Don't forget to check your spam or junk folder if you don't see the email.")}
               </p>
               <div>
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#52665A] hover:text-[#35483E] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#52665A] dark:text-[#B2B7BB] hover:text-[#35483E] dark:hover:text-[#F2F3F3] transition-colors"
                 >
                   <ArrowLeft size={13} className="rtl:rotate-180" />
                   <span>{t("auth.back_to_signin", "Back to Sign In")}</span>
@@ -509,14 +509,14 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="register-name"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.full_name", "Full Name")}
                 </label>
                 <div className="relative group">
                   <User
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="register-name"
@@ -528,7 +528,7 @@ export default function RegisterPage() {
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                 </div>
               </div>
@@ -537,14 +537,14 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="register-email"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.email", "Email")}
                 </label>
                 <div className="relative group">
                   <Mail
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="register-email"
@@ -556,7 +556,7 @@ export default function RegisterPage() {
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                 </div>
               </div>
@@ -565,14 +565,14 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="register-password"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.password", "Password")}
                 </label>
                 <div className="relative group">
                   <Lock
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="register-password"
@@ -584,7 +584,7 @@ export default function RegisterPage() {
                     value={form.password}
                     onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                   <button
                     type="button"
@@ -594,16 +594,16 @@ export default function RegisterPage() {
                         ? t("auth.hide_password", "Hide password")
                         : t("auth.show_password", "Show password")
                     }
-                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] hover:text-[#35483E] hover:bg-[#E4EDE5]/60 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E]"
+                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] hover:text-[#35483E] dark:hover:text-[#F2F3F3] hover:bg-[#E4EDE5]/60 dark:hover:bg-[#282C30] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E] dark:focus:ring-[#789580]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
                 {/* Clear Password Requirements Note */}
-                <p className="text-[12px] text-[#52665A] flex items-center gap-1.5 pt-0.5">
+                <p className="text-[12px] text-[#52665A] dark:text-[#B2B7BB] flex items-center gap-1.5 pt-0.5">
                   <span
                     className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
-                      form.password.length >= 6 ? "bg-[#35483E]" : "bg-[#D9A19A]"
+                      form.password.length >= 6 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
                     }`}
                   />
                   <span>{t("auth.password_min_length", "Must be at least 6 characters")}</span>
@@ -630,18 +630,18 @@ export default function RegisterPage() {
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
                   required
-                  className="mt-0.5 h-4 w-4 rounded border-[#E5E0D6] text-[#35483E] focus:ring-[#35483E]/25 cursor-pointer accent-[#35483E]"
+                  className="mt-0.5 h-4 w-4 rounded border-[#E5E0D6] dark:border-[#373C40] text-[#35483E] dark:text-[#789580] dark:bg-[#202326] focus:ring-[#35483E]/25 dark:focus:ring-[#789580]/30 cursor-pointer accent-[#35483E] dark:accent-[#789580]"
                 />
                 <label
                   htmlFor="agreeTermsRegister"
-                  className="text-xs text-[#52665A] leading-snug cursor-pointer select-none"
+                  className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-snug cursor-pointer select-none"
                 >
                   {t("auth.agree_terms_prefix", "I agree to the")}{" "}
                   <Link
                     to="/terms"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[#35483E] font-medium underline underline-offset-2 decoration-[#C5D5C8] hover:decoration-[#35483E] hover:text-[#24332B] transition-colors"
+                    className="text-[#35483E] dark:text-[#F2F3F3] font-medium underline underline-offset-2 decoration-[#C5D5C8] dark:decoration-[#373C40] hover:decoration-[#35483E] dark:hover:decoration-[#789580] hover:text-[#24332B] dark:hover:text-[#FFFFFF] transition-colors"
                   >
                     {t("auth.terms_and_conditions", "Terms & Conditions")}
                   </Link>{" "}
@@ -650,7 +650,7 @@ export default function RegisterPage() {
                     to="/privacy"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[#35483E] font-medium underline underline-offset-2 decoration-[#C5D5C8] hover:decoration-[#35483E] hover:text-[#24332B] transition-colors"
+                    className="text-[#35483E] dark:text-[#F2F3F3] font-medium underline underline-offset-2 decoration-[#C5D5C8] dark:decoration-[#373C40] hover:decoration-[#35483E] dark:hover:decoration-[#789580] hover:text-[#24332B] dark:hover:text-[#FFFFFF] transition-colors"
                   >
                     {t("auth.privacy_policy", "Privacy Policy")}
                   </Link>
@@ -684,12 +684,12 @@ export default function RegisterPage() {
             </form>
 
             {/* Link back to Sign In */}
-            <div className="mt-6 pt-5 border-t border-[#E5E0D6] text-center">
-              <p className="text-xs text-[#52665A]">
+            <div className="mt-6 pt-5 border-t border-[#E5E0D6] dark:border-[#373C40] text-center">
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB]">
                 {t("auth.have_account", "Already have an account?")}{" "}
                 <Link
                   to="/login"
-                  className="font-semibold text-[#B35D52] hover:text-[#91463D] transition-colors"
+                  className="font-semibold text-[#B35D52] hover:text-[#91463D] dark:text-[#D9A19A] dark:hover:text-[#B35D52] transition-colors"
                 >
                   {t("auth.sign_in", "Sign In")}
                 </Link>
@@ -699,7 +699,7 @@ export default function RegisterPage() {
         </main>
 
         {/* Bottom Copyright Footer */}
-        <footer className="w-full max-w-md mx-auto text-center py-2 text-xs text-[#52665A]">
+        <footer className="w-full max-w-md mx-auto text-center py-2 text-xs text-[#52665A] dark:text-[#8C9399]">
           © 2026 CardioScan · {t("auth.brand_subtitle", "Cardiovascular Health & ML")}
         </footer>
       </div>

@@ -678,17 +678,17 @@ export default function PredictPage() {
                 </div>
               </div>
 
-              <div className="tour-patient-form pt-4 border-t border-[#E5E0D6] space-y-3">
+              <div className="tour-patient-form pt-4 border-t border-[#E5E0D6] dark:border-[#373C40] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5">
-                    <User size={13} className="text-[#35483E]" />
-                    <span className="text-xs font-semibold text-[#35483E] uppercase tracking-wider">
+                    <User size={13} className="text-[#35483E] dark:text-[#789580]" />
+                    <span className="text-xs font-semibold text-[#35483E] dark:text-[#F2F3F3] uppercase tracking-wider">
                       {t("predict.patient_identity_section", "Patient Identification Record")}
                     </span>
                   </div>
                   {prefilledFromProfile && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#E4EDE5] text-[#2D7A58] border border-[#D3DFD5] self-start sm:self-auto">
-                      <CheckCircle size={10} className="text-[#2D7A58]" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#E4EDE5] dark:bg-[#282C30] text-[#2D7A58] dark:text-[#789580] border border-[#D3DFD5] dark:border-[#373C40] self-start sm:self-auto">
+                      <CheckCircle size={10} className="text-[#2D7A58] dark:text-[#789580]" />
                       <span>{t("predict.prefilled_badge", "Prefilled from Health Profile")}</span>
                     </span>
                   )}
@@ -696,13 +696,13 @@ export default function PredictPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Field 1: Permanent Patient ID (Immutable & Read-Only) */}
-                  <div className="space-y-1.5 p-3 rounded-xl bg-white/70 border border-[#E5E0D6]">
+                  <div className="space-y-1.5 p-3 rounded-xl bg-white/70 dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40]">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-semibold text-[#52665A] uppercase tracking-wider flex items-center gap-1">
-                        <Lock size={11} className="text-[#35483E]" />
+                      <label className="text-[11px] font-semibold text-[#52665A] dark:text-[#B2B7BB] uppercase tracking-wider flex items-center gap-1">
+                        <Lock size={11} className="text-[#35483E] dark:text-[#789580]" />
                         <span>{t("predict.patient_id_label", "Permanent Patient ID")}</span>
                       </label>
-                      <span className="text-[10px] font-mono text-[#2D7A58] bg-[#E4EDE5] px-1.5 py-0.5 rounded border border-[#D3DFD5]">
+                      <span className="text-[10px] font-mono text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30] px-1.5 py-0.5 rounded border border-[#D3DFD5] dark:border-[#373C40]">
                         Immutable
                       </span>
                     </div>
@@ -711,28 +711,28 @@ export default function PredictPage() {
                       readOnly
                       tabIndex={-1}
                       value={form.patient_id || (user ? "Pending Assignment" : "Unassigned (Guest Session)")}
-                      className="glossy-input w-full px-3 py-2 text-xs sm:text-sm font-mono font-bold text-[#35483E] bg-[#FAF8F5] cursor-not-allowed select-all border-[#E5E0D6]"
+                      className="glossy-input w-full px-3 py-2 text-xs sm:text-sm font-mono font-bold text-[#35483E] dark:text-[#F2F3F3] bg-[#FAF8F5] dark:bg-[#17191B] cursor-not-allowed select-all border-[#E5E0D6] dark:border-[#373C40]"
                       title="Permanent cryptographic identifier assigned to this account. Never editable."
                     />
-                    <p className="text-[10px] text-[#8A9990] flex items-center gap-1">
+                    <p className="text-[10px] text-[#8A9990] dark:text-[#8C9399] flex items-center gap-1">
                       <span>{t("predict.patient_id_sub", "Cryptographically bound to authenticated record.")}</span>
                     </p>
                   </div>
 
                   {/* Field 2: Patient Legal Name (48h Window or Read-Only) */}
-                  <div className="space-y-1.5 p-3 rounded-xl bg-white/70 border border-[#E5E0D6]">
+                  <div className="space-y-1.5 p-3 rounded-xl bg-white/70 dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40]">
                     <div className="flex items-center justify-between flex-wrap gap-1">
-                      <label htmlFor="patient-name-input" className="text-[11px] font-semibold text-[#52665A] uppercase tracking-wider flex items-center gap-1">
+                      <label htmlFor="patient-name-input" className="text-[11px] font-semibold text-[#52665A] dark:text-[#B2B7BB] uppercase tracking-wider flex items-center gap-1">
                         <span>{t("predict.patient_legal_name", "Patient Legal Name")}</span>
-                        <span className="text-[#B35D52] font-bold" title="Required">*</span>
+                        <span className="text-[#B35D52] dark:text-[#E08A80] font-bold" title="Required">*</span>
                       </label>
                       {user && profileCooldown ? (
                         profileCooldown.can_edit ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#2D7A58] bg-[#E4EDE5] px-1.5 py-0.5 rounded border border-[#D3DFD5]">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30] px-1.5 py-0.5 rounded border border-[#D3DFD5] dark:border-[#373C40]">
                             <span>Editable ({profileCooldown.remaining_hours}h left)</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#B35D52] bg-[#FAF0EE] px-1.5 py-0.5 rounded border border-[#F0D5D1]">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#B35D52] dark:text-[#E08A80] bg-[#FAF0EE] dark:bg-[#261B1A] px-1.5 py-0.5 rounded border border-[#F0D5D1] dark:border-[#4A2D2A]">
                             <Lock size={9} />
                             <span>Locked (48h passed)</span>
                           </span>
@@ -746,10 +746,10 @@ export default function PredictPage() {
                       readOnly={user && profileCooldown && !profileCooldown.can_edit}
                       className={`glossy-input w-full px-3 py-2 text-xs sm:text-sm transition-colors ${
                         user && profileCooldown && !profileCooldown.can_edit
-                          ? "bg-[#FAF8F5] text-[#35483E] font-medium cursor-not-allowed opacity-90 border-[#E5E0D6]"
+                          ? "bg-[#FAF8F5] dark:bg-[#17191B] text-[#35483E] dark:text-[#F2F3F3] font-medium cursor-not-allowed opacity-90 border-[#E5E0D6] dark:border-[#373C40]"
                           : patientNameTouched && !(form.patient_name && form.patient_name.trim().length > 0)
-                          ? "border-[#B35D52] focus:border-[#B35D52] focus:ring-[#B35D52]/20"
-                          : ""
+                          ? "border-[#B35D52] dark:border-[#E08A80] focus:border-[#B35D52] dark:focus:border-[#E08A80] focus:ring-[#B35D52]/20 dark:bg-[#17191B] dark:text-[#F2F3F3]"
+                          : "dark:bg-[#17191B] dark:text-[#F2F3F3] dark:border-[#373C40] dark:placeholder-[#8C9399]"
                       }`}
                       placeholder={t("predict.patient_name_placeholder", "e.g., Dr. Sarah Jenkins")}
                       value={form.patient_name || ""}
@@ -764,7 +764,7 @@ export default function PredictPage() {
                     />
 
                     {patientNameTouched && !(form.patient_name && form.patient_name.trim().length > 0) && (
-                      <p id="patient-name-error" role="alert" className="text-[11px] text-[#B35D52] font-medium mt-1 flex items-center gap-1 animate-fadeinup">
+                      <p id="patient-name-error" role="alert" className="text-[11px] text-[#B35D52] dark:text-[#E08A80] font-medium mt-1 flex items-center gap-1 animate-fadeinup">
                         <AlertCircle size={12} className="shrink-0" />
                         <span>{t("predict.patient_name_required", "Please enter a valid patient legal name to proceed.")}</span>
                       </p>
@@ -772,10 +772,10 @@ export default function PredictPage() {
 
                     {user && profileCooldown && !profileCooldown.can_edit && (
                       <div className="flex items-center justify-between pt-0.5 text-[10px]">
-                        <span className="text-[#8A9990]">Permanent legal name.</span>
+                        <span className="text-[#8A9990] dark:text-[#8C9399]">Permanent legal name.</span>
                         <Link
                           to="/dashboard?setup=true"
-                          className="text-[#35483E] underline font-semibold hover:text-[#2D7A58]"
+                          className="text-[#35483E] dark:text-[#789580] underline font-semibold hover:text-[#2D7A58] dark:hover:text-[#8BA792] transition-colors"
                         >
                           Request Correction &rarr;
                         </Link>

@@ -509,16 +509,16 @@ export default function MetricsPage() {
         {/* ── Healthcare Research Notice & Disclaimer Banner ── */}
         <section
           aria-label="Clinical Evaluation Notice"
-          className="scroll-mt-24 rounded-2xl border border-[#D3DFD5] bg-[#E4EDE5]/80 p-4 sm:p-5 text-[#2D7A58] flex flex-col sm:flex-row items-start sm:items-center gap-3.5 shadow-xs"
+          className="scroll-mt-24 rounded-2xl border border-[#D3DFD5] dark:border-[#373C40] bg-[#E4EDE5]/80 dark:bg-[#202326] p-4 sm:p-5 text-[#2D7A58] dark:text-[#789580] flex flex-col sm:flex-row items-start sm:items-center gap-3.5 shadow-xs"
         >
-          <div className="p-2 rounded-xl bg-white/70 border border-[#D3DFD5] text-[#2D7A58] shrink-0">
-            <ShieldCheck size={20} className="text-[#2D7A58]" />
+          <div className="p-2 rounded-xl bg-white/70 dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] text-[#2D7A58] dark:text-[#789580] shrink-0">
+            <ShieldCheck size={20} className="text-[#2D7A58] dark:text-[#789580]" />
           </div>
-          <div className="space-y-1 text-xs sm:text-sm leading-relaxed text-[#35483E]">
-            <p className="font-bold font-serif text-sm text-[#2D7A58]">
+          <div className="space-y-1 text-xs sm:text-sm leading-relaxed text-[#35483E] dark:text-[#F2F3F3]">
+            <p className="font-bold font-serif text-sm text-[#2D7A58] dark:text-[#789580]">
               {t("metrics_page.disclaimer_title", "Research & Educational Tool Notice")}
             </p>
-            <p className="text-[#52665A] text-xs">
+            <p className="text-[#52665A] dark:text-[#B2B7BB] text-xs">
               {t(
                 "metrics_page.disclaimer_text",
                 "CardioScan is strictly an educational tool designed to promote cardiovascular health literacy and demonstrate clinical machine learning methods. The statistical metrics shown here measure retrospective discrimination on benchmark cohorts and do not constitute an individualized patient risk assessment, a clinical diagnosis, or a medical device clearance."

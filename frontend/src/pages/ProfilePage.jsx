@@ -548,18 +548,18 @@ export default function ProfilePage() {
       {/* ── 3. Top Grid: Patient ID Card & Profile Completion Status ── */}
       <section className={isProfileComplete ? "w-full" : "grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"}>
         {/* Dedicated Patient Identity Card */}
-        <div className={`${isProfileComplete ? "w-full" : "lg:col-span-7"} glossy-card p-5 sm:p-6 border border-[#E5E0D6] shadow-sm flex flex-col justify-between space-y-4`}>
+        <div className={`${isProfileComplete ? "w-full" : "lg:col-span-7"} glossy-card p-5 sm:p-6 border border-[#E5E0D6] dark:border-[#373C40] shadow-sm flex flex-col justify-between space-y-4`}>
           {/* Card Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#E5E0D6] gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#E5E0D6] dark:border-[#373C40] gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#E4EDE5] border border-[#D3DFD5] text-[#35483E] flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-[#E4EDE5] dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] text-[#35483E] dark:text-[#789580] flex items-center justify-center shrink-0 shadow-2xs">
                 <User size={18} />
               </div>
               <div>
-                <h2 className="font-serif font-semibold text-base text-[#35483E] tracking-tight">
+                <h2 className="font-serif font-semibold text-base text-[#35483E] dark:text-[#F2F3F3] tracking-tight">
                   {t("dashboard.patient_identity_title", "Patient Identification (PID)")}
                 </h2>
-                <p className="text-[11px] text-[#6B7F74]">
+                <p className="text-[11px] text-[#6B7F74] dark:text-[#B2B7BB]">
                   {t(
                     "dashboard.patient_identity_desc",
                     "Unique identifier assigned for verified medical report generation and audit tracking."
@@ -570,12 +570,12 @@ export default function ProfilePage() {
 
             <div className="flex items-center shrink-0 self-start sm:self-center">
               {activePatientId ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-[#E4EDE5] text-[#35483E] border border-[#D3DFD5] shadow-2xs">
-                  <CheckCircle2 size={13} className="text-[#35483E]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#F2F3F3] border border-[#D3DFD5] dark:border-[#373C40] shadow-2xs">
+                  <CheckCircle2 size={13} className="text-[#35483E] dark:text-[#789580]" />
                   <span>{t("dashboard.pid_status_active", "Active Permanent PID")}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-[#FAF0EE] text-[#B35D52] border border-[#F0D5D1] shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-[#FAF0EE] dark:bg-[#261B1A] text-[#B35D52] dark:text-[#E08A80] border border-[#F0D5D1] dark:border-[#4A2D2A] shadow-2xs">
                   <span className="w-2 h-2 rounded-full bg-[#B35D52] animate-pulse" />
                   <span>{t("dashboard.patient_id_pending", "Pending Email Verification")}</span>
                 </span>
@@ -586,52 +586,52 @@ export default function ProfilePage() {
           {/* Distinguished Identity Fields: Patient Name and Patient ID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 my-1">
             {/* Separate Patient Legal Name Field */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-[#F7F5F0]/80 border border-[#E5E0D6] flex flex-col justify-between space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[#6B7F74]">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-[#F7F5F0]/80 dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] flex flex-col justify-between space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[#6B7F74] dark:text-[#B2B7BB]">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <User size={12} className="text-[#35483E]" />
+                  <User size={12} className="text-[#35483E] dark:text-[#789580]" />
                   {t("dashboard.patient_name_label", "Patient Legal Name")}
                 </span>
-                <span className="text-[10px] text-[#52665A] bg-white px-2 py-0.5 rounded border border-[#E5E0D6] shadow-2xs">
+                <span className="text-[10px] text-[#52665A] dark:text-[#B2B7BB] bg-white dark:bg-[#282C30] px-2 py-0.5 rounded border border-[#E5E0D6] dark:border-[#373C40] shadow-2xs">
                   {t("dashboard.verified_identity", "Official Identity")}
                 </span>
               </div>
               <div className="pt-0.5">
-                <p className="font-serif font-bold text-lg sm:text-xl text-[#35483E] truncate">
+                <p className="font-serif font-bold text-lg sm:text-xl text-[#35483E] dark:text-[#F2F3F3] truncate">
                   {profile?.name || user?.name || t("dashboard.not_specified", "Not specified")}
                 </p>
-                <p className="text-[11px] text-[#8A9990] mt-0.5">
+                <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399] mt-0.5">
                   {t("dashboard.patient_name_sub", "Recorded on file for clinical evaluation & reports")}
                 </p>
               </div>
             </div>
 
             {/* Permanent Patient ID Badge with Copy Button */}
-            <div className="p-3.5 sm:p-4 rounded-xl border-2 border-dashed border-[#D3DFD5] bg-[#E4EDE5]/30 flex flex-col justify-between space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[#6B7F74]">
+            <div className="p-3.5 sm:p-4 rounded-xl border-2 border-dashed border-[#D3DFD5] dark:border-[#373C40] bg-[#E4EDE5]/30 dark:bg-[#202326] flex flex-col justify-between space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[#6B7F74] dark:text-[#B2B7BB]">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <ShieldCheck size={12} className="text-[#35483E]" />
+                  <ShieldCheck size={12} className="text-[#35483E] dark:text-[#789580]" />
                   {t("dashboard.patient_id_label", "Permanent Patient ID")}
                 </span>
-                <span className="text-[10px] text-[#35483E] bg-[#E4EDE5] px-2 py-0.5 rounded border border-[#D3DFD5] font-semibold">
+                <span className="text-[10px] text-[#35483E] dark:text-[#F2F3F3] bg-[#E4EDE5] dark:bg-[#282C30] px-2 py-0.5 rounded border border-[#D3DFD5] dark:border-[#373C40] font-semibold">
                   {activePatientId ? "Immutable" : "Pending"}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2.5 sm:gap-3 pt-0.5 min-w-0">
-                <span className="font-mono text-base sm:text-lg lg:text-xl font-bold tracking-wider sm:tracking-widest text-[#35483E] whitespace-nowrap">
+                <span className="font-mono text-base sm:text-lg lg:text-xl font-bold tracking-wider sm:tracking-widest text-[#35483E] dark:text-[#F2F3F3] whitespace-nowrap">
                   {activePatientId || t("dashboard.patient_id_placeholder", "CS-••••-••••")}
                 </span>
                 {activePatientId && (
                   <button
                     type="button"
                     onClick={handleCopyPid}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#E5E0D6] bg-white hover:bg-[#E4EDE5] text-[#52665A] hover:text-[#35483E] transition-all cursor-pointer shadow-2xs text-xs font-medium shrink-0"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#E5E0D6] dark:border-[#373C40] bg-white dark:bg-[#282C30] hover:bg-[#E4EDE5] dark:hover:bg-[#32373C] text-[#52665A] dark:text-[#B2B7BB] hover:text-[#35483E] dark:hover:text-[#F2F3F3] transition-all cursor-pointer shadow-2xs text-xs font-medium shrink-0"
                     title={t("dashboard.copy_pid", "Copy Patient ID")}
                   >
                     {copiedPid ? (
                       <>
-                        <Check size={13} className="text-[#35483E]" />
-                        <span className="text-[11px] text-[#35483E] font-semibold">{t("dashboard.copied", "Copied")}</span>
+                        <Check size={13} className="text-[#35483E] dark:text-[#789580]" />
+                        <span className="text-[11px] text-[#35483E] dark:text-[#789580] font-semibold">{t("dashboard.copied", "Copied")}</span>
                       </>
                     ) : (
                       <>
@@ -642,7 +642,7 @@ export default function ProfilePage() {
                   </button>
                 )}
               </div>
-              <p className="text-[11px] text-[#8A9990]">
+              <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">
                 {t("dashboard.patient_id_sub", "Included on official A4 cardiovascular diagnostic PDFs")}
               </p>
             </div>
@@ -797,20 +797,20 @@ export default function ProfilePage() {
         {/* Parameters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Full Legal Name */}
-          <div className="p-4 rounded-xl bg-white border border-[#E5E0D6] space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#6B7F74]">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2">
+            <div className="flex items-center justify-between text-xs text-[#6B7F74] dark:text-[#B2B7BB]">
               <div className="flex items-center gap-1.5">
-                <User size={14} className="text-[#35483E]" />
+                <User size={14} className="text-[#35483E] dark:text-[#789580]" />
                 <span>{t("dashboard.full_name", "Full Legal Name")}</span>
               </div>
-              <span className="text-[10px] font-mono bg-[#E4EDE5] text-[#35483E] px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#F2F3F3] border border-transparent dark:border-[#373C40] px-1.5 py-0.5 rounded">
                 {t("dashboard.status_configured", "Configured")}
               </span>
             </div>
-            <p className="font-serif font-semibold text-base text-[#35483E] truncate">
+            <p className="font-serif font-semibold text-base text-[#35483E] dark:text-[#F2F3F3] truncate">
               {profile?.name || user?.name || "Not specified"}
             </p>
-            <p className="text-[11px] text-[#8A9990]">Recorded from account registration profile.</p>
+            <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">Recorded from account registration profile.</p>
           </div>
 
           {/* Email Address */}
@@ -1389,20 +1389,20 @@ export default function ProfilePage() {
               )}
 
               {/* Section 1: Full Legal Name */}
-              <div className="space-y-1.5 p-3.5 sm:p-4 rounded-xl border border-[#E5E0D6] bg-[#FAF8F5]/60">
+              <div className="space-y-1.5 p-3.5 sm:p-4 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-[#FAF8F5]/60 dark:bg-[#202326]">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#35483E] flex items-center gap-1.5">
-                    <User size={13} className="text-[#35483E]" />
+                  <label className="text-xs font-semibold text-[#35483E] dark:text-[#F2F3F3] flex items-center gap-1.5">
+                    <User size={13} className="text-[#35483E] dark:text-[#789580]" />
                     <span>{t("dashboard.full_name", "Full Legal Name")}</span>
                   </label>
                   <div className="flex items-center gap-2">
                     {cooldowns?.name && !cooldowns.name.can_edit ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#B35D52] bg-[#FAF0EE] border border-[#F0D5D1] px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#B35D52] dark:text-[#E08A80] bg-[#FAF0EE] dark:bg-[#261B1A] border border-[#F0D5D1] dark:border-[#4A2D2A] px-2 py-0.5 rounded-md">
                         <Lock size={10} />
                         <span>{t("dashboard.name_locked_badge", "Locked (48h window expired)")}</span>
                       </span>
                     ) : cooldowns?.name?.remaining_hours ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#2D7A58] bg-[#E4EDE5] border border-[#D3DFD5] px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#2D7A58] dark:text-[#789580] bg-[#E4EDE5] dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] px-2 py-0.5 rounded-md">
                         <span>{t("dashboard.name_edit_window_remaining", "{{hours}}h left to edit", { hours: cooldowns.name.remaining_hours })}</span>
                       </span>
                     ) : null}
@@ -1416,10 +1416,10 @@ export default function ProfilePage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Dr. Sarah Jenkins"
-                  className="glossy-input w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl disabled:opacity-60 disabled:bg-[#F7F5F0]"
+                  className="glossy-input w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl disabled:opacity-60 disabled:bg-[#F7F5F0] dark:disabled:bg-[#17191B] dark:bg-[#17191B] dark:text-[#F2F3F3] dark:border-[#373C40] dark:placeholder-[#8C9399]"
                 />
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-[#6B7F74]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-[#6B7F74] dark:text-[#8C9399]">
                   <span>{t("dashboard.baseline_name_hint", "Used for verified clinical summary reports")}</span>
                   {cooldowns?.name && !cooldowns.name.can_edit && (
                     <button
@@ -1433,7 +1433,7 @@ export default function ProfilePage() {
                         });
                         setIsCorrectionModalOpen(true);
                       }}
-                      className="text-[#35483E] underline font-semibold hover:text-[#2D7A58] cursor-pointer text-start sm:text-end"
+                      className="text-[#35483E] dark:text-[#789580] underline font-semibold hover:text-[#2D7A58] dark:hover:text-[#8BA792] cursor-pointer text-start sm:text-end transition-colors"
                     >
                       {t("dashboard.request_name_correction", "Request Verified Correction →")}
                     </button>

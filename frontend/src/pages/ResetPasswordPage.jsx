@@ -392,14 +392,14 @@ export default function ResetPasswordPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="new-password"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.new_password", "New Password")}
                 </label>
                 <div className="relative group">
                   <Lock
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="new-password"
@@ -411,7 +411,7 @@ export default function ResetPasswordPage() {
                     value={form.password}
                     onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                   <button
                     type="button"
@@ -421,15 +421,15 @@ export default function ResetPasswordPage() {
                         ? t("auth.hide_password", "Hide password")
                         : t("auth.show_password", "Show password")
                     }
-                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] hover:text-[#35483E] hover:bg-[#E4EDE5]/60 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E]"
+                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] hover:text-[#35483E] dark:hover:text-[#F2F3F3] hover:bg-[#E4EDE5]/60 dark:hover:bg-[#282C30] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E] dark:focus:ring-[#789580]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <div className="flex items-center gap-2 pt-0.5 text-xs text-[#52665A]">
+                <div className="flex items-center gap-2 pt-0.5 text-xs text-[#52665A] dark:text-[#B2B7BB]">
                   <span
                     className={`inline-block w-2 h-2 rounded-full transition-colors ${
-                      form.password.length >= 6 ? "bg-[#35483E]" : "bg-[#D9A19A]"
+                      form.password.length >= 6 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
                     }`}
                   />
                   <span>{t("auth.password_min_length", "Must be at least 6 characters")}</span>
@@ -440,14 +440,14 @@ export default function ResetPasswordPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="confirm-password"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E]"
+                  className="block text-xs font-semibold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3]"
                 >
                   {t("auth.confirm_password", "Confirm Password")}
                 </label>
                 <div className="relative group">
                   <Lock
                     size={16}
-                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] group-focus-within:text-[#35483E] transition-colors pointer-events-none"
+                    className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] group-focus-within:text-[#35483E] dark:group-focus-within:text-[#789580] transition-colors pointer-events-none"
                   />
                   <input
                     id="confirm-password"
@@ -459,7 +459,7 @@ export default function ResetPasswordPage() {
                     value={form.confirm}
                     onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
                     required
-                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] text-sm placeholder:text-[#8A9990] focus:outline-none transition-all shadow-2xs"
+                    className="w-full h-11 px-3.5 pl-10 pr-11 rtl:pl-11 rtl:pr-10 rounded-xl glossy-input text-[#35483E] dark:text-[#F2F3F3] dark:bg-[#202326] dark:border-[#373C40] dark:focus:border-[#789580] text-sm placeholder:text-[#8A9990] dark:placeholder:text-[#8C9399] focus:outline-none transition-all shadow-2xs"
                   />
                   <button
                     type="button"
@@ -469,13 +469,13 @@ export default function ResetPasswordPage() {
                         ? t("auth.hide_password", "Hide password")
                         : t("auth.show_password", "Show password")
                     }
-                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] hover:text-[#35483E] hover:bg-[#E4EDE5]/60 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E]"
+                    className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-[#52665A] dark:text-[#8C9399] hover:text-[#35483E] dark:hover:text-[#F2F3F3] hover:bg-[#E4EDE5]/60 dark:hover:bg-[#282C30] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#35483E] dark:focus:ring-[#789580]"
                   >
                     {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
                 {form.confirm && form.password !== form.confirm && (
-                  <p className="text-xs text-[#B35D52] flex items-center gap-1.5 pt-0.5">
+                  <p className="text-xs text-[#B35D52] dark:text-[#D9A19A] flex items-center gap-1.5 pt-0.5">
                     <AlertCircle size={13} className="shrink-0" />
                     <span>{t("auth.passwords_do_not_match", "Passwords do not match.")}</span>
                   </p>

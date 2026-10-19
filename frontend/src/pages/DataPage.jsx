@@ -84,7 +84,7 @@ export default function DataPage() {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F7F5F0] text-[#35483E] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full min-h-[calc(100vh-4rem)] bg-[#F7F5F0] dark:bg-[#17191B] text-[#35483E] dark:text-[#F2F3F3] py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
           <div className="space-y-3">
             <div className="h-4 w-48 bg-black/5 rounded" />
@@ -148,7 +148,7 @@ export default function DataPage() {
 
   return (
     <div
-      className="w-full min-h-[calc(100vh-4rem)] relative selection:bg-[#E4EDE5] selection:text-[#35483E] transition-colors duration-300 bg-[#F7F5F0] text-[#35483E]"
+      className="w-full min-h-[calc(100vh-4rem)] relative selection:bg-[#E4EDE5] selection:text-[#35483E] transition-colors duration-300 bg-[#F7F5F0] dark:bg-[#17191B] text-[#35483E] dark:text-[#F2F3F3]"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <ECGBackground />
@@ -179,20 +179,20 @@ export default function DataPage() {
         {/* ── Healthcare Research Notice & Privacy Banner ── */}
         <section
           aria-label="Research & Educational Cohort Notice"
-          className="rounded-2xl bg-[#E4EDE5]/90 border border-[#D3DFD5] p-5 sm:p-6 text-[#35483E] shadow-2xs"
+          className="rounded-2xl bg-[#E4EDE5]/90 dark:bg-[#202326] border border-[#D3DFD5] dark:border-[#373C40] p-5 sm:p-6 text-[#35483E] dark:text-[#F2F3F3] shadow-2xs"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#35483E] text-white flex items-center justify-center shrink-0 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-[#35483E] dark:bg-[#282C30] text-white flex items-center justify-center shrink-0 shadow-2xs border border-transparent dark:border-[#373C40]">
               <ShieldAlert size={20} className="text-[#D9A19A]" />
             </div>
             <div className="space-y-1 flex-1">
-              <h2 className="text-sm font-semibold tracking-wide">
+              <h2 className="text-sm font-semibold tracking-wide text-[#35483E] dark:text-[#F2F3F3]">
                 {t(
                   "data_page.privacy_banner_title",
                   "Research & Educational Cohort Notice: Strict Privacy & De-Identification"
                 )}
               </h2>
-              <p className="text-xs sm:text-sm text-[#52665A] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 {t(
                   "data_page.privacy_banner_desc",
                   "CardioScan operates exclusively on historical, de-identified academic research data originating from the 1988 Cleveland Clinic Foundation study. To safeguard patient privacy and prevent misuse as an Electronic Health Record (EHR), patient-level records are not browsable or downloadable. Statistical aggregations shown here reflect research cohorts and do not constitute clinical diagnosis or medical device clearance."
@@ -407,8 +407,8 @@ export default function DataPage() {
                 onClick={() => setActiveTab("table")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === "table"
-                    ? "bg-[#35483E] text-white"
-                    : "bg-[#F7F5F0] text-[#52665A] hover:bg-[#E5E0D6]"
+                    ? "bg-[#35483E] text-white dark:bg-[#789580] dark:text-[#17191B] font-semibold"
+                    : "bg-[#F7F5F0] dark:bg-[#282C30] text-[#52665A] dark:text-[#B2B7BB] hover:bg-[#E5E0D6] dark:hover:bg-[#32373C] hover:text-[#35483E] dark:hover:text-[#F2F3F3]"
                 }`}
               >
                 Table View
@@ -418,8 +418,8 @@ export default function DataPage() {
                 onClick={() => setActiveTab("cards")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === "cards"
-                    ? "bg-[#35483E] text-white"
-                    : "bg-[#F7F5F0] text-[#52665A] hover:bg-[#E5E0D6]"
+                    ? "bg-[#35483E] text-white dark:bg-[#789580] dark:text-[#17191B] font-semibold"
+                    : "bg-[#F7F5F0] dark:bg-[#282C30] text-[#52665A] dark:text-[#B2B7BB] hover:bg-[#E5E0D6] dark:hover:bg-[#32373C] hover:text-[#35483E] dark:hover:text-[#F2F3F3]"
                 }`}
               >
                 Detailed Cards
@@ -430,19 +430,19 @@ export default function DataPage() {
           {/* Search & Filters */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A9990]" />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A9990] dark:text-[#8C9399]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by feature name, abbreviation (e.g. thalach, oldpeak), or clinical description..."
-                className="w-full pl-10 pr-9 py-2 rounded-xl border border-[#E5E0D6] bg-[#F7F5F0]/60 text-xs sm:text-sm text-[#35483E] placeholder-[#8A9990] focus:outline-none focus:ring-2 focus:ring-[#35483E]/20 focus:border-[#35483E]"
+                className="w-full pl-10 pr-9 py-2 rounded-xl border border-[#E5E0D6] dark:border-[#373C40] bg-[#F7F5F0]/60 dark:bg-[#17191B] text-xs sm:text-sm text-[#35483E] dark:text-[#F2F3F3] placeholder-[#8A9990] dark:placeholder-[#8C9399] focus:outline-none focus:ring-2 focus:ring-[#35483E]/20 dark:focus:ring-[#789580]/30 focus:border-[#35483E] dark:focus:border-[#789580] transition-colors"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9990] hover:text-[#35483E]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9990] hover:text-[#35483E] dark:text-[#8C9399] dark:hover:text-[#F2F3F3]"
                 >
                   <X size={14} />
                 </button>
@@ -451,7 +451,7 @@ export default function DataPage() {
 
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-              <SlidersHorizontal size={14} className="text-[#8A9990] shrink-0 mr-1 hidden sm:block" />
+              <SlidersHorizontal size={14} className="text-[#8A9990] dark:text-[#8C9399] shrink-0 mr-1 hidden sm:block" />
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -459,8 +459,8 @@ export default function DataPage() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize shrink-0 transition-all ${
                     selectedCategory === cat
-                      ? "bg-[#35483E] text-white shadow-2xs"
-                      : "bg-[#F7F5F0] text-[#52665A] hover:bg-[#E4EDE5] hover:text-[#35483E]"
+                      ? "bg-[#35483E] text-white dark:bg-[#789580] dark:text-[#17191B] shadow-2xs font-semibold"
+                      : "bg-[#F7F5F0] dark:bg-[#282C30] text-[#52665A] dark:text-[#B2B7BB] border border-transparent dark:border-[#373C40] hover:bg-[#E4EDE5] dark:hover:bg-[#32373C] hover:text-[#35483E] dark:hover:text-[#F2F3F3]"
                   }`}
                 >
                   {cat === "all" ? "All Categories" : cat}
@@ -471,10 +471,10 @@ export default function DataPage() {
 
           {/* Table View */}
           {activeTab === "table" ? (
-            <div className="overflow-x-auto rounded-xl border border-[#E5E0D6]">
+            <div className="overflow-x-auto rounded-xl border border-[#E5E0D6] dark:border-[#373C40]">
               <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead>
-                  <tr className="bg-[#F7F5F0] border-b border-[#E5E0D6] text-[#52665A] font-semibold">
+                  <tr className="bg-[#F7F5F0] dark:bg-[#282C30] border-b border-[#E5E0D6] dark:border-[#373C40] text-[#52665A] dark:text-[#B2B7BB] font-semibold">
                     <th className="py-3 px-4">Feature & Code</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Data Type & Unit</th>
@@ -484,44 +484,44 @@ export default function DataPage() {
                     <th className="py-3 px-4 text-right">Missingness</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E0D6]/70">
+                <tbody className="divide-y divide-[#E5E0D6]/70 dark:divide-[#373C40]">
                   {filteredFeatures.map((f) => {
                     const isPositive = f.corr_unique > 0;
                     return (
                       <tr
                         key={f.key}
-                        className="hover:bg-[#F7F5F0]/60 transition-colors cursor-pointer"
+                        className="hover:bg-[#F7F5F0]/60 dark:hover:bg-[#282C30]/50 transition-colors cursor-pointer"
                         onClick={() => setExpandedFeature(expandedFeature === f.key ? null : f.key)}
                       >
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-[#35483E]">{f.name}</div>
-                          <code className="text-[11px] font-mono text-[#52665A] bg-black/5 px-1.5 py-0.5 rounded">
+                          <div className="font-semibold text-[#35483E] dark:text-[#F2F3F3]">{f.name}</div>
+                          <code className="text-[11px] font-mono text-[#52665A] dark:text-[#B2B7BB] bg-black/5 dark:bg-[#17191B] px-1.5 py-0.5 rounded">
                             {f.key}
                           </code>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#E4EDE5] text-[#35483E]">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#F2F3F3] border border-transparent dark:border-[#373C40]">
                             {f.category}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-[#52665A]">
+                        <td className="py-3 px-4 text-[#52665A] dark:text-[#B2B7BB]">
                           <div>{f.data_type}</div>
-                          {f.unit && <div className="text-[11px] font-mono text-[#8A9990]">{f.unit}</div>}
+                          {f.unit && <div className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399]">{f.unit}</div>}
                         </td>
-                        <td className="py-3 px-4 font-mono text-xs text-[#35483E]">
+                        <td className="py-3 px-4 font-mono text-xs text-[#35483E] dark:text-[#F2F3F3]">
                           {f.valid_range_documented}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-mono text-xs text-[#35483E]">
+                          <div className="font-mono text-xs text-[#35483E] dark:text-[#F2F3F3]">
                             {f.data_type.includes("Continuous") || f.data_type.includes("Integer") ? (
                               <span>
                                 {f.mean_unique} ± {f.std_unique}
                               </span>
                             ) : (
-                              <span className="text-[#52665A] italic">Discrete Levels</span>
+                              <span className="text-[#52665A] dark:text-[#B2B7BB] italic">Discrete Levels</span>
                             )}
                           </div>
-                          <div className="text-[11px] text-[#8A9990]">
+                          <div className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">
                             Range: [{f.min_observed} – {f.max_observed}]
                           </div>
                         </td>
@@ -529,8 +529,8 @@ export default function DataPage() {
                           <span
                             className={`inline-block font-mono font-semibold px-2 py-0.5 rounded text-xs ${
                               isPositive
-                                ? "bg-[#FAF0EE] text-[#B35D52]"
-                                : "bg-[#EBF3ED] text-[#2D7A58]"
+                                ? "bg-[#FAF0EE] dark:bg-[#261B1A] text-[#B35D52] dark:text-[#E08A80] border border-transparent dark:border-[#4A2D2A]"
+                                : "bg-[#EBF3ED] dark:bg-[#1D2923] text-[#2D7A58] dark:text-[#789580] border border-transparent dark:border-[#2D4536]"
                             }`}
                           >
                             {f.corr_unique > 0 ? `+${f.corr_unique.toFixed(3)}` : f.corr_unique.toFixed(3)}
@@ -538,12 +538,12 @@ export default function DataPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           {f.missing_count_unique > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#B35D52] bg-[#FAF0EE] px-2 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#B35D52] dark:text-[#E08A80] bg-[#FAF0EE] dark:bg-[#261B1A] px-2 py-0.5 rounded-md border border-transparent dark:border-[#4A2D2A]">
                               <AlertTriangle size={11} />
                               <span>{f.missing_count_unique} sentinel ({f.missing_pct_unique}%)</span>
                             </span>
                           ) : (
-                            <span className="text-[11px] text-[#2D7A58] font-medium">0 nulls</span>
+                            <span className="text-[11px] text-[#2D7A58] dark:text-[#789580] font-medium">0 nulls</span>
                           )}
                         </td>
                       </tr>
@@ -561,41 +561,43 @@ export default function DataPage() {
                 return (
                   <div
                     key={f.key}
-                    className="rounded-xl p-5 border border-[#E5E0D6] bg-[#F7F5F0]/40 hover:bg-[#F7F5F0] transition-colors space-y-3"
+                    className="rounded-xl p-5 border border-[#E5E0D6] dark:border-[#373C40] bg-[#F7F5F0]/40 dark:bg-[#202326] hover:bg-[#F7F5F0] dark:hover:bg-[#282C30] transition-colors space-y-3"
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-serif font-bold text-base text-[#35483E]">{f.name}</h4>
-                          <code className="text-xs font-mono text-[#52665A] bg-black/5 px-1.5 py-0.5 rounded">
+                          <h4 className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">{f.name}</h4>
+                          <code className="text-xs font-mono text-[#52665A] dark:text-[#B2B7BB] bg-black/5 dark:bg-[#17191B] px-1.5 py-0.5 rounded">
                             {f.key}
                           </code>
                         </div>
-                        <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#E4EDE5] text-[#35483E]">
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#F2F3F3] border border-transparent dark:border-[#373C40]">
                           {f.category}
                         </span>
                       </div>
                       <span
                         className={`font-mono font-bold text-xs px-2.5 py-1 rounded-md ${
-                          isPositive ? "bg-[#FAF0EE] text-[#B35D52]" : "bg-[#EBF3ED] text-[#2D7A58]"
+                          isPositive
+                            ? "bg-[#FAF0EE] dark:bg-[#261B1A] text-[#B35D52] dark:text-[#E08A80] border border-transparent dark:border-[#4A2D2A]"
+                            : "bg-[#EBF3ED] dark:bg-[#1D2923] text-[#2D7A58] dark:text-[#789580] border border-transparent dark:border-[#2D4536]"
                         }`}
                       >
                         r = {f.corr_unique > 0 ? `+${f.corr_unique.toFixed(3)}` : f.corr_unique.toFixed(3)}
                       </span>
                     </div>
 
-                    <p className="text-xs text-[#52665A] leading-relaxed">{f.description}</p>
+                    <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">{f.description}</p>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#E5E0D6]">
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#E5E0D6] dark:border-[#373C40]">
                       <div>
-                        <span className="text-[#8A9990] block text-[11px]">Type & Unit:</span>
-                        <span className="font-medium text-[#35483E]">
+                        <span className="text-[#8A9990] dark:text-[#8C9399] block text-[11px]">Type & Unit:</span>
+                        <span className="font-medium text-[#35483E] dark:text-[#F2F3F3]">
                           {f.data_type} {f.unit ? `(${f.unit})` : ""}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#8A9990] block text-[11px]">Observed Range:</span>
-                        <span className="font-mono text-[#35483E]">
+                        <span className="text-[#8A9990] dark:text-[#8C9399] block text-[11px]">Observed Range:</span>
+                        <span className="font-mono text-[#35483E] dark:text-[#F2F3F3]">
                           {f.min_observed} – {f.max_observed}
                         </span>
                       </div>
@@ -606,7 +608,7 @@ export default function DataPage() {
                       <button
                         type="button"
                         onClick={() => setExpandedFeature(isExp ? null : f.key)}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[#35483E] hover:text-[#B35D52] pt-1"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#35483E] dark:text-[#789580] hover:text-[#B35D52] dark:hover:text-[#8BA792] pt-1 transition-colors"
                       >
                         <span>{isExp ? "Hide Level Definitions" : "View Discrete Level Definitions"}</span>
                         {isExp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -614,16 +616,16 @@ export default function DataPage() {
                     )}
 
                     {isExp && f.categories && (
-                      <div className="mt-2 p-3 rounded-lg bg-white border border-[#E5E0D6] space-y-1.5 text-xs">
-                        <span className="text-[11px] font-mono text-[#8A9990] block mb-1">
+                      <div className="mt-2 p-3 rounded-lg bg-white dark:bg-[#17191B] border border-[#E5E0D6] dark:border-[#373C40] space-y-1.5 text-xs">
+                        <span className="text-[11px] font-mono text-[#8A9990] dark:text-[#8C9399] block mb-1">
                           DISCRETE ENCODING DICTIONARY:
                         </span>
                         {Object.entries(f.categories).map(([k, v]) => (
                           <div key={k} className="flex items-start gap-2">
-                            <code className="font-mono font-bold text-[#35483E] bg-black/5 px-1 py-0.5 rounded">
+                            <code className="font-mono font-bold text-[#35483E] dark:text-[#F2F3F3] bg-black/5 dark:bg-[#282C30] px-1 py-0.5 rounded">
                               {k}
                             </code>
-                            <span className="text-[#52665A]">{v}</span>
+                            <span className="text-[#52665A] dark:text-[#B2B7BB]">{v}</span>
                           </div>
                         ))}
                       </div>
@@ -745,16 +747,16 @@ export default function DataPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Raw Dataset Distribution */}
-            <div className="p-5 rounded-xl bg-[#F7F5F0]/60 border border-[#E5E0D6] space-y-4">
+            <div className="p-5 rounded-xl bg-[#F7F5F0]/60 dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-4">
               <div className="flex items-center justify-between">
-                <span className="font-serif font-bold text-base text-[#35483E]">
+                <span className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">
                   Raw Compilation (N = {rawRows})
                 </span>
-                <span className="text-xs font-mono text-[#52665A]">Kaggle File Distribution</span>
+                <span className="text-xs font-mono text-[#52665A] dark:text-[#B2B7BB]">Kaggle File Distribution</span>
               </div>
 
               {/* Progress bar */}
-              <div className="h-6 rounded-xl bg-black/5 overflow-hidden flex border border-[#E5E0D6]">
+              <div className="h-6 rounded-xl bg-black/5 dark:bg-black/30 overflow-hidden flex border border-[#E5E0D6] dark:border-[#373C40]">
                 <div
                   className="bg-[#2D7A58] h-full flex items-center justify-center text-[11px] font-mono font-bold text-white transition-all"
                   style={{ width: `${rawNegPct}%` }}
@@ -772,36 +774,36 @@ export default function DataPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-white border border-[#E5E0D6]">
-                  <div className="flex items-center gap-1.5 text-[#2D7A58] font-semibold mb-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#2D7A58]" />
+                <div className="p-3 rounded-lg bg-white dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                  <div className="flex items-center gap-1.5 text-[#2D7A58] dark:text-[#5EAD81] font-semibold mb-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#2D7A58] dark:bg-[#5EAD81]" />
                     <span>Absence of CAD (0)</span>
                   </div>
-                  <p className="font-mono text-sm font-bold text-[#35483E]">{rawNeg} patients</p>
-                  <p className="text-[11px] text-[#8A9990]">&lt; 50% stenosis on angiogram</p>
+                  <p className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">{rawNeg} patients</p>
+                  <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">&lt; 50% stenosis on angiogram</p>
                 </div>
-                <div className="p-3 rounded-lg bg-white border border-[#E5E0D6]">
-                  <div className="flex items-center gap-1.5 text-[#B35D52] font-semibold mb-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#B35D52]" />
+                <div className="p-3 rounded-lg bg-white dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                  <div className="flex items-center gap-1.5 text-[#B35D52] dark:text-[#E08A80] font-semibold mb-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#B35D52] dark:bg-[#E08A80]" />
                     <span>Presence of CAD (1)</span>
                   </div>
-                  <p className="font-mono text-sm font-bold text-[#35483E]">{rawPos} patients</p>
-                  <p className="text-[11px] text-[#8A9990]">≥ 50% stenosis on angiogram</p>
+                  <p className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">{rawPos} patients</p>
+                  <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">≥ 50% stenosis on angiogram</p>
                 </div>
               </div>
             </div>
 
             {/* Deduplicated Cohort Distribution */}
-            <div className="p-5 rounded-xl bg-[#F7F5F0]/60 border border-[#E5E0D6] space-y-4">
+            <div className="p-5 rounded-xl bg-[#F7F5F0]/60 dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-4">
               <div className="flex items-center justify-between">
-                <span className="font-serif font-bold text-base text-[#35483E]">
+                <span className="font-serif font-bold text-base text-[#35483E] dark:text-[#F2F3F3]">
                   Unique Patients (N = {uniqueRows})
                 </span>
-                <span className="text-xs font-mono text-[#2D7A58] font-semibold">True Clinical Cohort</span>
+                <span className="text-xs font-mono text-[#2D7A58] dark:text-[#5EAD81] font-semibold">True Clinical Cohort</span>
               </div>
 
               {/* Progress bar */}
-              <div className="h-6 rounded-xl bg-black/5 overflow-hidden flex border border-[#E5E0D6]">
+              <div className="h-6 rounded-xl bg-black/5 dark:bg-black/30 overflow-hidden flex border border-[#E5E0D6] dark:border-[#373C40]">
                 <div
                   className="bg-[#2D7A58] h-full flex items-center justify-center text-[11px] font-mono font-bold text-white transition-all"
                   style={{ width: `${uniqNegPct}%` }}
@@ -819,34 +821,34 @@ export default function DataPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-white border border-[#E5E0D6]">
-                  <div className="flex items-center gap-1.5 text-[#2D7A58] font-semibold mb-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#2D7A58]" />
+                <div className="p-3 rounded-lg bg-white dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                  <div className="flex items-center gap-1.5 text-[#2D7A58] dark:text-[#5EAD81] font-semibold mb-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#2D7A58] dark:bg-[#5EAD81]" />
                     <span>Absence of CAD (0)</span>
                   </div>
-                  <p className="font-mono text-sm font-bold text-[#35483E]">{uniqNeg} patients</p>
-                  <p className="text-[11px] text-[#8A9990]">&lt; 50% stenosis on angiogram</p>
+                  <p className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">{uniqNeg} patients</p>
+                  <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">&lt; 50% stenosis on angiogram</p>
                 </div>
-                <div className="p-3 rounded-lg bg-white border border-[#E5E0D6]">
-                  <div className="flex items-center gap-1.5 text-[#B35D52] font-semibold mb-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#B35D52]" />
+                <div className="p-3 rounded-lg bg-white dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                  <div className="flex items-center gap-1.5 text-[#B35D52] dark:text-[#E08A80] font-semibold mb-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#B35D52] dark:bg-[#E08A80]" />
                     <span>Presence of CAD (1)</span>
                   </div>
-                  <p className="font-mono text-sm font-bold text-[#35483E]">{uniqPos} patients</p>
-                  <p className="text-[11px] text-[#8A9990]">≥ 50% stenosis on angiogram</p>
+                  <p className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">{uniqPos} patients</p>
+                  <p className="text-[11px] text-[#8A9990] dark:text-[#8C9399]">≥ 50% stenosis on angiogram</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Epidemiological Prevalence Notice */}
-          <div className="p-4 rounded-xl bg-[#FAF0EE]/70 border border-[#F0D5D1] text-xs text-[#35483E] space-y-1">
-            <div className="flex items-center gap-2 font-bold text-[#B35D52]">
+          <div className="p-4 rounded-xl bg-[#FAF0EE]/70 dark:bg-[#261B1A] border border-[#F0D5D1] dark:border-[#4A2D2A] text-xs text-[#35483E] dark:text-[#F2F3F3] space-y-1">
+            <div className="flex items-center gap-2 font-bold text-[#B35D52] dark:text-[#E08A80]">
               <AlertTriangle size={15} />
               <span>Crucial Epidemiological Limitation: Referral Population vs. General Public</span>
             </div>
-            <p className="text-[#52665A] leading-relaxed">
-              The observed ~54% disease prevalence reflects a hospital referral cohort of symptomatic individuals undergoing diagnostic cardiac catheterization at the Cleveland Clinic. This prevalence must <strong>never</strong> be interpreted as the background prevalence of coronary artery disease in the general asymptomatic population, which is substantially lower (&lt; 5–10% in comparable age brackets). Applying models trained on high-prevalence referral data to unselected screening populations produces high rates of false positives.
+            <p className="text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
+              The observed ~54% disease prevalence reflects a hospital referral cohort of symptomatic individuals undergoing diagnostic cardiac catheterization at the Cleveland Clinic. This prevalence must <strong className="text-[#35483E] dark:text-[#F2F3F3]">never</strong> be interpreted as the background prevalence of coronary artery disease in the general asymptomatic population, which is substantially lower (&lt; 5–10% in comparable age brackets). Applying models trained on high-prevalence referral data to unselected screening populations produces high rates of false positives.
             </p>
           </div>
         </section>
@@ -867,49 +869,49 @@ export default function DataPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Step 1 */}
-            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#E5E0D6] space-y-2">
-              <span className="font-mono text-xs font-bold text-[#B35D52]">STAGE 01</span>
-              <h4 className="font-serif font-bold text-sm text-[#35483E]">Input Sanitization</h4>
-              <p className="text-xs text-[#52665A] leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#F7F5F0] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2">
+              <span className="font-mono text-xs font-bold text-[#B35D52] dark:text-[#E08A80]">STAGE 01</span>
+              <h4 className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">Input Sanitization</h4>
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 Inference payloads are validated against strict physiological boundaries (e.g. blood pressure 60–250 mm Hg, cholesterol 100–600 mg/dL).
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#E5E0D6] space-y-2">
-              <span className="font-mono text-xs font-bold text-[#B35D52]">STAGE 02</span>
-              <h4 className="font-serif font-bold text-sm text-[#35483E]">StandardScaler Scaling</h4>
-              <p className="text-xs text-[#52665A] leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#F7F5F0] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2">
+              <span className="font-mono text-xs font-bold text-[#B35D52] dark:text-[#E08A80]">STAGE 02</span>
+              <h4 className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">StandardScaler Scaling</h4>
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 Standardization is fit strictly on continuous parameters for Logistic Regression, KNN, and SVM. Decision trees (Random Forest) operate on raw features.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#E5E0D6] space-y-2">
-              <span className="font-mono text-xs font-bold text-[#B35D52]">STAGE 03</span>
-              <h4 className="font-serif font-bold text-sm text-[#35483E]">Categorical Representation</h4>
-              <p className="text-xs text-[#52665A] leading-relaxed">
-                Categorical variables (<code className="font-mono text-[11px]">cp</code>, <code className="font-mono text-[11px]">restecg</code>, <code className="font-mono text-[11px]">slope</code>, <code className="font-mono text-[11px]">thal</code>) are preserved as integer levels to maintain legacy inference compatibility.
+            <div className="p-4 rounded-xl bg-[#F7F5F0] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2">
+              <span className="font-mono text-xs font-bold text-[#B35D52] dark:text-[#E08A80]">STAGE 03</span>
+              <h4 className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">Categorical Representation</h4>
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
+                Categorical variables (<code className="font-mono text-[11px] text-[#35483E] dark:text-[#F2F3F3] bg-black/5 dark:bg-[#17191B] px-1 rounded">cp</code>, <code className="font-mono text-[11px] text-[#35483E] dark:text-[#F2F3F3] bg-black/5 dark:bg-[#17191B] px-1 rounded">restecg</code>, <code className="font-mono text-[11px] text-[#35483E] dark:text-[#F2F3F3] bg-black/5 dark:bg-[#17191B] px-1 rounded">slope</code>, <code className="font-mono text-[11px] text-[#35483E] dark:text-[#F2F3F3] bg-black/5 dark:bg-[#17191B] px-1 rounded">thal</code>) are preserved as integer levels to maintain legacy inference compatibility.
               </p>
             </div>
 
             {/* Step 4 */}
-            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#E5E0D6] space-y-2">
-              <span className="font-mono text-xs font-bold text-[#B35D52]">STAGE 04</span>
-              <h4 className="font-serif font-bold text-sm text-[#35483E]">Partition Safeguards</h4>
-              <p className="text-xs text-[#52665A] leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#F7F5F0] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2">
+              <span className="font-mono text-xs font-bold text-[#B35D52] dark:text-[#E08A80]">STAGE 04</span>
+              <h4 className="font-serif font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">Partition Safeguards</h4>
+              <p className="text-xs text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                 Offline evaluation uses Stratified 5-Fold Cross-Validation on deduplicated unique patients with scalers encapsulated strictly inside training folds.
               </p>
             </div>
           </div>
 
           {/* Unresolved Limitations Box */}
-          <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E0D6] space-y-2 text-xs">
-            <div className="flex items-center gap-2 font-bold text-[#35483E]">
-              <FileText size={15} className="text-[#52665A]" />
+          <div className="p-4 rounded-xl bg-[#FAF9F5] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] space-y-2 text-xs">
+            <div className="flex items-center gap-2 font-bold text-[#35483E] dark:text-[#F2F3F3]">
+              <FileText size={15} className="text-[#52665A] dark:text-[#8C9399]" />
               <span>Full Scientific Transparency: Unresolved Dataset Limitations</span>
             </div>
-            <ul className="list-disc list-inside space-y-1 text-[#52665A] leading-relaxed">
+            <ul className="list-disc list-inside space-y-1 text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
               <li>
                 <strong>Historical Single-Center Origin:</strong> Data was collected in 1988 at Cleveland Clinic Foundation; clinical testing protocols and diagnostic thresholds have evolved substantially over the past four decades.
               </li>

@@ -148,8 +148,8 @@ function RiskBadge({ level }) {
   const { t } = useTranslation();
   if (level === "Low") {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F0F7F2] dark:bg-[#12281D] text-[#2D7A58] dark:text-[#52B788] border border-[#C4DFCD] dark:border-[#2D7A58]/40">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#2D7A58] dark:bg-[#52B788]" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F0F7F2] dark:bg-[#202823] text-[#2D7A58] dark:text-[#789580] border border-[#C4DFCD] dark:border-[#373C40]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#2D7A58] dark:bg-[#789580]" />
         {t("predict.low_risk", "Low Risk")}
       </span>
     );
@@ -245,18 +245,18 @@ function RiskTrendChart({ predictions }) {
                 if (active && payload && payload.length) {
                   const item = payload[0].payload;
                   return (
-                    <div className="bg-white dark:bg-[#1D2821] border border-[#E5E0D6] dark:border-[#2E3F35] rounded-xl p-3 shadow-md text-xs space-y-1">
-                      <p className="font-serif font-bold text-[#35483E] dark:text-[#F7F5F0]">
+                    <div className="bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl p-3 shadow-md text-xs space-y-1">
+                      <p className="font-serif font-bold text-[#35483E] dark:text-[#F2F3F3]">
                         Report CS-REP-{String(item.id).padStart(6, "0")}
                       </p>
-                      <p className="text-[#52665A] dark:text-[#A3B8A6]">{item.fullDate}</p>
-                      <div className="flex items-center gap-2 pt-1 border-t border-[#E5E0D6] dark:border-[#2E3F35]">
-                        <span className="font-mono font-bold text-sm text-[#35483E] dark:text-[#F7F5F0]">
+                      <p className="text-[#52665A] dark:text-[#B2B7BB]">{item.fullDate}</p>
+                      <div className="flex items-center gap-2 pt-1 border-t border-[#E5E0D6] dark:border-[#373C40]">
+                        <span className="font-mono font-bold text-sm text-[#35483E] dark:text-[#F2F3F3]">
                           {item.risk}% Risk
                         </span>
                         <RiskBadge level={item.level} />
                       </div>
-                      <p className="text-[10px] text-[#8A9990] dark:text-[#7C9283]">{item.model}</p>
+                      <p className="text-[10px] text-[#8A9990] dark:text-[#8C9399]">{item.model}</p>
                     </div>
                   );
                 }
@@ -284,7 +284,7 @@ function RiskTrendChart({ predictions }) {
                     cy={cy}
                     r={4}
                     fill={c}
-                    stroke={isDark ? "#1D2821" : "#FFFFFF"}
+                    stroke={isDark ? "#202326" : "#FFFFFF"}
                     strokeWidth={2}
                   />
                 );
@@ -371,7 +371,7 @@ function TimelineCard({ pred, onDelete, user }) {
           className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs ${
             isPositive
               ? "bg-[#FDF3F2] dark:bg-[#2A1312] border-[#EACAC6] dark:border-[#B35D52]/40 text-[#B35D52] dark:text-[#E08A80]"
-              : "bg-[#F0F7F2] dark:bg-[#12281D] border-[#C4DFCD] dark:border-[#2D7A58]/40 text-[#2D7A58] dark:text-[#52B788]"
+              : "bg-[#F0F7F2] dark:bg-[#202823] border-[#C4DFCD] dark:border-[#373C40] text-[#2D7A58] dark:text-[#789580]"
           }`}
         >
           {isPositive ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
@@ -385,7 +385,7 @@ function TimelineCard({ pred, onDelete, user }) {
           {/* ── Card Header Strip ── */}
           <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#E5E0D6]/60 dark:border-white/10 bg-[#FAF8F5]/60 dark:bg-white/5">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="font-mono text-xs font-bold text-[#35483E] px-2 py-0.5 rounded-md bg-white dark:bg-[#111827] border border-[#E5E0D6] dark:border-white/10">
+              <span className="font-mono text-xs font-bold text-[#35483E] dark:text-[#F2F3F3] px-2 py-0.5 rounded-md bg-white dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
                 {reportId}
               </span>
               <span className="flex items-center gap-1 text-xs text-[#52665A]">
@@ -394,7 +394,7 @@ function TimelineCard({ pred, onDelete, user }) {
               <span className="flex items-center gap-1 text-xs text-[#52665A]">
                 <Clock size={13} className="text-[#8A9990]" /> {formattedTime}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-md bg-[#E4EDE5]/60 dark:bg-[#162720] text-[#35483E] border border-[#D3DFD5] dark:border-[#2D7A58]/30">
+              <span className="text-xs px-2 py-0.5 rounded-md bg-[#E4EDE5]/60 dark:bg-[#282C30] text-[#35483E] dark:text-[#B2B7BB] border border-[#D3DFD5] dark:border-[#373C40]">
                 {formatModelName(pred.model_used)}
               </span>
             </div>
@@ -444,10 +444,10 @@ function TimelineCard({ pred, onDelete, user }) {
             {/* Left: Patient Identity at time of test */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-base sm:text-lg text-[#35483E]">
+                <span className="font-serif font-bold text-base sm:text-lg text-[#35483E] dark:text-[#F2F3F3]">
                   {recordedName}
                 </span>
-                <span className="text-xs font-mono font-semibold text-[#52665A] bg-[#F7F5F0] dark:bg-white/5 px-2 py-0.5 rounded border border-[#E5E0D6] dark:border-white/10">
+                <span className="text-xs font-mono font-semibold text-[#52665A] dark:text-[#B2B7BB] bg-[#F7F5F0] dark:bg-[#282C30] px-2 py-0.5 rounded border border-[#E5E0D6] dark:border-[#373C40]">
                   {recordedId}
                 </span>
               </div>
@@ -512,9 +512,9 @@ function TimelineCard({ pred, onDelete, user }) {
                       {CLINICAL_GROUPS.map((group) => (
                         <div
                           key={group.category}
-                          className="bg-white dark:bg-[#1D2821] border border-[#E5E0D6] dark:border-[#2E3F35] rounded-xl p-3 shadow-2xs space-y-2"
+                          className="bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl p-3 shadow-2xs space-y-2"
                         >
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#35483E] dark:text-[#F7F5F0] border-b border-[#E5E0D6] dark:border-[#2E3F35] pb-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#35483E] dark:text-[#F2F3F3] border-b border-[#E5E0D6] dark:border-[#373C40] pb-1">
                             {group.category}
                           </p>
                           <div className="space-y-1.5 text-xs">
@@ -528,10 +528,10 @@ function TimelineCard({ pred, onDelete, user }) {
                               return (
                                 <div
                                   key={field.key}
-                                  className="flex items-center justify-between py-0.5 border-b border-[#E5E0D6]/40 dark:border-[#2E3F35]/40 last:border-0"
+                                  className="flex items-center justify-between py-0.5 border-b border-[#E5E0D6]/40 dark:border-[#373C40]/40 last:border-0"
                                 >
-                                  <span className="text-[#52665A] dark:text-[#A3B8A6]">{field.label}</span>
-                                  <span className="font-mono font-bold text-[#1A241E] dark:text-[#F7F5F0]">
+                                  <span className="text-[#52665A] dark:text-[#B2B7BB]">{field.label}</span>
+                                  <span className="font-mono font-bold text-[#1A241E] dark:text-[#F2F3F3]">
                                     {displayVal}
                                   </span>
                                 </div>
@@ -545,12 +545,12 @@ function TimelineCard({ pred, onDelete, user }) {
 
                   {/* SHAP Feature Attributions (if available) */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#52665A] dark:text-[#A3B8A6] mb-2 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#52665A] dark:text-[#B2B7BB] mb-2 flex items-center gap-1.5">
                       <Sparkles size={13} className="text-[#B35D52]" />
                       {t("history.feature_attributions", "Model Feature Attributions (SHAP Impact)")}
                     </h4>
                     {Array.isArray(pred.shap_values) && pred.shap_values.length > 0 ? (
-                      <div className="bg-white dark:bg-[#1D2821] border border-[#E5E0D6] dark:border-[#2E3F35] rounded-xl p-3 shadow-2xs space-y-2">
+                      <div className="bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl p-3 shadow-2xs space-y-2">
                         {["cp", "thalach", "ca", "thal", "oldpeak", "trestbps", "age"].map((name) => {
                           const idx = FEATURE_NAMES.indexOf(name);
                           const val = pred.shap_values[idx];
@@ -558,7 +558,7 @@ function TimelineCard({ pred, onDelete, user }) {
                           const isRiskDriver = val > 0;
                           return (
                             <div key={name} className="flex items-center gap-2 text-xs">
-                              <span className="w-20 font-mono text-xs text-[#52665A] dark:text-[#A3B8A6] shrink-0">
+                              <span className="w-20 font-mono text-xs text-[#52665A] dark:text-[#B2B7BB] shrink-0">
                                 {name}
                               </span>
                               <div className="flex-1 h-2 rounded-full bg-[#E5E0D6]/50 dark:bg-white/10 overflow-hidden">
@@ -584,7 +584,7 @@ function TimelineCard({ pred, onDelete, user }) {
                         })}
                       </div>
                     ) : (
-                      <div className="p-3 bg-white dark:bg-[#1D2821] border border-[#E5E0D6] dark:border-[#2E3F35] rounded-xl text-xs text-[#6B7F74] dark:text-[#A3B8A6]">
+                      <div className="p-3 bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl text-xs text-[#6B7F74] dark:text-[#8C9399]">
                         {t("history.no_shap_data", "Feature attributions (SHAP) were not computed for this assessment record.")}
                       </div>
                     )}
@@ -783,7 +783,7 @@ export default function HistoryPage() {
   return (
     <div
       className={`min-h-screen transition-colors duration-200 ${
-        isDark ? "bg-[#141D18] text-[#F7F5F0]" : "bg-[#F7F5F0] text-[#35483E]"
+        isDark ? "bg-[#17191B] text-[#F2F3F3]" : "bg-[#F7F5F0] text-[#35483E]"
       }`}
       dir={isRTL ? "rtl" : "ltr"}
     >
@@ -819,16 +819,16 @@ export default function HistoryPage() {
         {/* ── Educational & Data Integrity Notice ── */}
         <section
           aria-label="Clinical History Disclaimer"
-          className="rounded-2xl border border-[#D3DFD5] dark:border-[#2D7A58]/30 bg-[#E4EDE5]/70 dark:bg-[#12281D]/60 p-4 text-[#2D7A58] dark:text-[#52B788] flex items-start gap-3 shadow-xs"
+          className="rounded-2xl border border-[#D3DFD5] dark:border-[#373C40] bg-[#E4EDE5]/70 dark:bg-[#202326] p-4 text-[#2D7A58] dark:text-[#789580] flex items-start gap-3 shadow-xs"
         >
-          <div className="p-2 rounded-xl bg-white/80 dark:bg-[#1A382B] border border-[#D3DFD5] dark:border-[#2D7A58]/40 shrink-0 text-[#2D7A58] dark:text-[#52B788]">
+          <div className="p-2 rounded-xl bg-white/80 dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] shrink-0 text-[#2D7A58] dark:text-[#789580]">
             <ShieldCheck size={18} />
           </div>
-          <div className="space-y-0.5 text-xs text-[#35483E] dark:text-[#E4EDE5] leading-relaxed">
-            <p className="font-bold font-serif text-[#2D7A58] dark:text-[#52B788]">
+          <div className="space-y-0.5 text-xs text-[#35483E] dark:text-[#F2F3F3] leading-relaxed">
+            <p className="font-bold font-serif text-[#2D7A58] dark:text-[#789580]">
               {t("history.disclaimer_title", "Historical Integrity & Medical Scope")}
             </p>
-            <p className="text-[#52665A] dark:text-[#94a3b8]">
+            <p className="text-[#52665A] dark:text-[#B2B7BB]">
               {t("history.disclaimer_body", "All entries below represent frozen records of assessments performed at that specific date and time. CardioScan never reruns machine learning inference on historical reviews. These records are educational aids and do not replace professional physician consultations.")}
             </p>
           </div>
@@ -864,13 +864,13 @@ export default function HistoryPage() {
           </div>
 
           <div className="glossy-card border border-[#E5E0D6] dark:border-white/10 rounded-2xl p-4 shadow-xs">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#2D7A58] dark:text-[#52B788] mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#2D7A58] dark:text-[#789580] mb-1">
               {t("history.kpi_low", "Low Risk Outcomes")}
             </p>
-            <p className="font-serif text-2xl sm:text-3xl font-bold text-[#2D7A58] dark:text-[#52B788] font-mono">
+            <p className="font-serif text-2xl sm:text-3xl font-bold text-[#2D7A58] dark:text-[#789580] font-mono">
               {stats.low}
             </p>
-            <p className="text-[10px] text-[#8A9990] dark:text-[#64748b] mt-0.5">
+            <p className="text-[10px] text-[#8A9990] dark:text-[#8C9399] mt-0.5">
               {t("history.kpi_low_sub", {
                 pct: stats.total ? Math.round((stats.low / stats.total) * 100) : 0,
                 defaultValue: `${stats.total ? Math.round((stats.low / stats.total) * 100) : 0}% favorable`,
@@ -1071,21 +1071,21 @@ export default function HistoryPage() {
           ) : predictions.length === 0 ? (
             /* ── Calm Empty State for New Users ── */
             <div className="glossy-card border border-[#E5E0D6] dark:border-white/10 rounded-2xl p-10 sm:p-14 text-center space-y-4 shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-[#E4EDE5] dark:bg-[#162720] text-[#35483E] dark:text-[#52B788] flex items-center justify-center mx-auto border border-[#D3DFD5] dark:border-[#2D7A58]/30">
-                <Heart size={30} className="fill-[#35483E]/20 dark:fill-[#52B788]/20" />
+              <div className="w-16 h-16 rounded-2xl bg-[#E4EDE5] dark:bg-[#282C30] text-[#35483E] dark:text-[#789580] flex items-center justify-center mx-auto border border-[#D3DFD5] dark:border-[#373C40]">
+                <Heart size={30} className="fill-[#35483E]/20 dark:fill-[#789580]/20" />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#35483E] dark:text-[#f1f5f9]">
+                <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#35483E] dark:text-[#F2F3F3]">
                   {t("history.empty_title", "No Clinical Assessments Recorded Yet")}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#52665A] dark:text-[#94a3b8] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
                   {t("history.empty_desc", "You haven't run any cardiovascular risk evaluations on your account. Begin your first assessment using your baseline clinical measurements to view your timeline and downloadable reports here.")}
                 </p>
               </div>
               <div className="pt-2">
                 <Link
                   to="/predict"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-[#35483E] hover:bg-[#2A3A31] transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-[#35483E] hover:bg-[#2A3A31] dark:bg-[#789580] dark:hover:bg-[#8BA792] dark:text-[#17191B] transition-colors shadow-2xs"
                 >
                   <Activity size={15} /> {t("history.begin_assessment", "Begin Your First Assessment")}
                 </Link>
