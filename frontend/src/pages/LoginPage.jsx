@@ -24,6 +24,7 @@ import {
   googleProvider,
   sendEmailVerification,
   signOut,
+  isFirebaseConfigured,
 } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import TurnstileWidget from "../components/TurnstileWidget";
@@ -168,45 +169,57 @@ export default function LoginPage() {
     try {
       // 1. Try Firebase Authentication first
       let idToken = null;
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, form.email.trim(), form.password);
-        if (!userCredential.user.emailVerified) {
-          await signOut(auth);
-          setNotVerified(true);
-          setLoading(false);
-          return;
-        }
-        idToken = await userCredential.user.getIdToken();
-      } catch (fbErr) {
-        // Fallback for pre-existing native accounts
-        if (fbErr.code === "auth/user-not-found" || fbErr.code === "auth/invalid-credential") {
-          try {
-            const { data } = await login({ ...form, turnstile_token: turnstileToken });
-            setSuccess(true);
-            setTimeout(() => {
-              loginUser(data.token, data.user);
-              navigate("/predict");
-            }, 800);
+      if (isFirebaseConfigured && auth) {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, form.email.trim(), form.password);
+          if (!userCredential.user.emailVerified) {
+            await signOut(auth);
+            setNotVerified(true);
+            setLoading(false);
             return;
-          } catch (nativeErr) {
-            if (nativeErr?.response?.data?.not_verified) {
-              setNotVerified(true);
-              setLoading(false);
-              return;
-            }
-            throw fbErr;
           }
+          idToken = await userCredential.user.getIdToken();
+        } catch (fbErr) {
+          // Fallback for pre-existing native accounts
+          if (fbErr.code === "auth/user-not-found" || fbErr.code === "auth/invalid-credential") {
+            try {
+              const { data } = await login({ ...form, turnstile_token: turnstileToken });
+              setSuccess(true);
+              setTimeout(() => {
+                loginUser(data.token, data.user);
+                navigate("/predict");
+              }, 800);
+              return;
+            } catch (nativeErr) {
+              if (nativeErr?.response?.data?.not_verified) {
+                setNotVerified(true);
+                setLoading(false);
+                return;
+              }
+              throw fbErr;
+            }
+          }
+          throw fbErr;
         }
-        throw fbErr;
-      }
 
-      // 2. Exchange verified Firebase ID token for internal CardioScan JWT
-      const { data } = await firebaseAuth(idToken, turnstileToken);
-      setSuccess(true);
-      setTimeout(() => {
-        loginUser(data.token, data.user);
-        navigate("/predict");
-      }, 800);
+        // Exchange verified Firebase ID token for internal CardioScan JWT
+        const { data } = await firebaseAuth(idToken, turnstileToken);
+        setSuccess(true);
+        setTimeout(() => {
+          loginUser(data.token, data.user);
+          navigate("/predict");
+        }, 800);
+        return;
+      } else {
+        // Direct native login when Firebase is not configured
+        const { data } = await login({ ...form, turnstile_token: turnstileToken });
+        setSuccess(true);
+        setTimeout(() => {
+          loginUser(data.token, data.user);
+          navigate("/predict");
+        }, 800);
+        return;
+      }
     } catch (err) {
       turnstileRef.current?.reset();
       setTurnstileToken(null);
@@ -234,6 +247,10 @@ export default function LoginPage() {
     }
     if (!agreeTerms) {
       toast.error(t("auth.must_agree_terms", "Please accept the Terms & Conditions and Privacy Policy."));
+      return;
+    }
+    if (!isFirebaseConfigured || !auth || !googleProvider) {
+      toast.error(t("auth.google_not_available", "Google sign-in is not configured. Please sign in with email and password."));
       return;
     }
     setGoogleLoading(true);

@@ -188,7 +188,7 @@ export default function TermsPage() {
             For academic questions or technical feedback regarding these Terms, contact:
           </p>
           <p className="text-xs font-mono text-[#0F172A] dark:text-[#F2F3F3] bg-white dark:bg-[#202326] p-3 rounded-lg border border-[#E0DED7] dark:border-[#373C40] inline-block">
-            Project Contact: admin@example.com
+            Project Contact: {process.env.REACT_APP_CONTACT_EMAIL || "contact@cardioscan.app"}
           </p>
         </section>
       </main>

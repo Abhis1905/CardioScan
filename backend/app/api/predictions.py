@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_optional
+from app.core.rate_limiter import rate_limit_predict, rate_limit_whatif
 from app.db.session import get_db
 from app.models.prediction import Prediction
 from app.models.user import User
@@ -16,7 +17,7 @@ from app.services.patient_identity import get_field_cooldown_status
 router = APIRouter(tags=["predictions"])
 
 
-@router.post("/predict")
+@router.post("/predict", dependencies=[Depends(rate_limit_predict)])
 def predict(
     payload: PredictRequest,
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -107,7 +108,7 @@ def predict(
     return resp
 
 
-@router.post("/whatif")
+@router.post("/whatif", dependencies=[Depends(rate_limit_whatif)])
 def whatif(payload: WhatIfRequest):
     data_dict = payload.model_dump()
     model_choice = payload.model or "random_forest"

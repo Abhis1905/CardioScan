@@ -27,7 +27,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import PageTransition from "./components/PageTransition";
 import "./index.css";
 
-const ADMIN_EMAIL = "admin@example.com";
+const ADMIN_EMAIL = (process.env.REACT_APP_ADMIN_EMAIL || "").trim().toLowerCase();
 
 function ThemeToggle() {
   const { dark, toggle } = useTheme();
@@ -107,7 +107,12 @@ function Navbar() {
     { to: "/data", icon: Database, label: t("nav.dataset") },
     { to: "/history", icon: History, label: t("nav.history") },
   ];
-  if (user?.email === ADMIN_EMAIL) {
+  const isAdmin = Boolean(
+    user?.is_admin ||
+    user?.role === "admin" ||
+    (ADMIN_EMAIL && user?.email && user.email.toLowerCase() === ADMIN_EMAIL)
+  );
+  if (isAdmin) {
     links.push({ to: "/admin", icon: Shield, label: t("nav.admin") });
   }
 

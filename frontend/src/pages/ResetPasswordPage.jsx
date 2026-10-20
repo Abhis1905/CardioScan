@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { resetPassword } from "../api";
-import { auth, confirmPasswordReset } from "../firebase";
+import { auth, confirmPasswordReset, isFirebaseConfigured } from "../firebase";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 function LeftPanel() {
@@ -162,10 +162,10 @@ export default function ResetPasswordPage() {
     }
     setLoading(true);
     try {
-      if (oobCode) {
+      if (oobCode && isFirebaseConfigured && auth) {
         await confirmPasswordReset(auth, oobCode, form.password);
       } else {
-        await resetPassword(token, form.password);
+        await resetPassword(token || oobCode, form.password);
       }
       setDone(true);
       setTimeout(() => navigate("/login"), 3000);

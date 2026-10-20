@@ -17,7 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { verifyTurnstile, resendVerification } from "../api";
+import { verifyTurnstile, resendVerification, register } from "../api";
 import {
   auth,
   createUserWithEmailAndPassword,
@@ -25,6 +25,7 @@ import {
   sendEmailVerification,
   signOut,
   signInWithEmailAndPassword,
+  isFirebaseConfigured,
 } from "../firebase";
 import TurnstileWidget from "../components/TurnstileWidget";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -223,6 +224,23 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!isFirebaseConfigured || !auth) {
+      try {
+        await register({ ...form, turnstile_token: turnstileToken });
+        setRegisteredEmail(form.email.trim());
+        setRegistered(true);
+        setLoading(false);
+        setCooldown(120);
+        return;
+      } catch (err) {
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+        toast.error(err?.response?.data?.error || t("auth.registration_failed", "Registration failed. Please try again."));
+        setLoading(false);
+        return;
+      }
+    }
+
     let userCredential = null;
     try {
       userCredential = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
@@ -291,7 +309,7 @@ export default function RegisterPage() {
     }
 
     try {
-      if (form.password) {
+      if (form.password && isFirebaseConfigured && auth) {
         const cred = await signInWithEmailAndPassword(auth, registeredEmail, form.password);
         await sendEmailVerification(cred.user);
         await signOut(auth);

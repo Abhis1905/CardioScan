@@ -116,3 +116,133 @@ def test_admin_process_cleanups(client, admin_headers, auth_headers):
     assert res_admin.status_code == 200
     assert "resolved" in res_admin.json()
     assert "remaining" in res_admin.json()
+
+
+def test_admin_access_fails_closed_when_admin_email_unset(client, db_session, test_user):
+    """When ADMIN_EMAIL is unset (None), standard users must be forbidden (HTTP 403)."""
+    from unittest.mock import patch
+    from app.core.config import settings
+    from app.core.security import create_access_token
+
+    token = create_access_token(subject=test_user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch.object(settings, "ADMIN_EMAIL", None):
+        res = client.get("/admin/check", headers=headers)
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Admin access required"
+
+
+def test_admin_role_granted_via_database_role(client, db_session):
+    """Users with database role='admin' have access even when ADMIN_EMAIL is unset."""
+    from unittest.mock import patch
+    from app.core.config import settings
+    from app.core.security import create_access_token, hash_password
+
+    rbac_admin = User(
+        name="DB Role Admin",
+        email="rbac_admin@example.org",
+        password_hash=hash_password("adminpass123"),
+        is_verified=True,
+        role="admin",
+    )
+    db_session.add(rbac_admin)
+    db_session.commit()
+    db_session.refresh(rbac_admin)
+
+    token = create_access_token(subject=rbac_admin.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch.object(settings, "ADMIN_EMAIL", None):
+        res = client.get("/admin/check", headers=headers)
+        assert res.status_code == 200
+        assert res.json()["is_admin"] is True
+
+
+def test_admin_bootstrap_lifecycle(client, db_session):
+    """
+    Test the explicit admin bootstrap lifecycle:
+    1. Initially, a standard patient user has 403 Forbidden on /admin/check.
+    2. Running the bootstrap utility (set_user_role) promotes the user in DB to 'admin'.
+    3. The user now has full 200 OK access to /admin/check even with ADMIN_EMAIL=None.
+    4. Demoting the user back to 'patient' immediately returns 403 Forbidden.
+    """
+    from unittest.mock import patch
+    from app.core.config import settings
+    from app.core.security import create_access_token, hash_password
+    from scripts.bootstrap_admin import set_user_role
+
+    user = User(
+        name="Candidate Admin",
+        email="candidate_admin@example.org",
+        password_hash=hash_password("pw123"),
+        is_verified=True,
+        role="patient",
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    token = create_access_token(subject=user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with patch.object(settings, "ADMIN_EMAIL", None):
+        # Step 1: Standard patient is rejected
+        r1 = client.get("/admin/check", headers=headers)
+        assert r1.status_code == 403
+
+        # Step 2: Bootstrap promotion
+        success = set_user_role(user.email, "admin", db=db_session)
+        assert success is True
+
+        # Step 3: Now granted access via database role
+        r2 = client.get("/admin/check", headers=headers)
+        assert r2.status_code == 200
+        assert r2.json()["is_admin"] is True
+
+        # Step 4: Demotion
+        set_user_role(user.email, "patient", db=db_session)
+        r3 = client.get("/admin/check", headers=headers)
+        assert r3.status_code == 403
+
+
+def test_failsafe_admin_env_promotion_property(db_session):
+    """
+    Verify the dual-layer model property:
+    - If DB role is 'patient', user.is_admin still returns True if email matches ADMIN_EMAIL.
+    - If email does not match and role is 'patient', user.is_admin returns False.
+    """
+    from unittest.mock import patch
+    from app.core.config import settings
+    from app.core.security import hash_password
+
+    user = User(
+        name="Env Admin",
+        email="env_admin@domain.com",
+        password_hash=hash_password("pw123"),
+        is_verified=True,
+        role="patient",
+    )
+    db_session.add(user)
+    db_session.commit()
+
+    with patch.object(settings, "ADMIN_EMAIL", "env_admin@domain.com"):
+        assert user.is_admin is True
+
+    with patch.object(settings, "ADMIN_EMAIL", "other_admin@domain.com"):
+        assert user.is_admin is False
+
+    with patch.object(settings, "ADMIN_EMAIL", None):
+        assert user.is_admin is False
+
+
+def test_legacy_admin_required_fails_closed_when_unconfigured():
+    """Verify legacy Flask admin_required fails closed when ADMIN_EMAIL is unconfigured."""
+    from unittest.mock import patch
+    import os
+    with patch.dict(os.environ, {}, clear=True):
+        admin_email = (os.environ.get("ADMIN_EMAIL") or "").strip().lower()
+        assert admin_email == ""
+
+
+

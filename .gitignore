@@ -3,8 +3,14 @@ frontend/node_modules/
 
 # Environment variables - NEVER push these
 .env
+.env.*
 *.env
+*.env.*
 backend/.env
+frontend/.env.local
+!.env.example
+!*.env.example
+!**/.env.example
 
 # Python
 __pycache__/
@@ -37,7 +43,10 @@ serviceAccountKey.json
 *.key
 
 # Legacy backup configs
-*legacy*
+*.legacy
+*.legacy.*
+backend/Procfile.legacy
+backend/railway.legacy.toml
 
 # Test and verification artifacts
 scratch/

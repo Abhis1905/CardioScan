@@ -3,10 +3,13 @@ import logging
 from typing import List
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
+from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.rate_limiter import rate_limit_chat
+from app.models.user import User
 from app.schemas.prediction import ChatRequest
 
 logger = logging.getLogger(__name__)
@@ -14,9 +17,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
 
 
-@router.post("/chat")
-def chat(payload: ChatRequest):
-    """Proxy AI assistant chat to Groq Cloud."""
+@router.post("/chat", dependencies=[Depends(rate_limit_chat)])
+def chat(
+    payload: ChatRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Proxy AI assistant chat to Groq Cloud for authenticated users."""
     if not settings.GROQ_API_KEY:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -29,7 +35,7 @@ def chat(payload: ChatRequest):
         messages.append({"role": m.role, "content": m.content})
 
     groq_payload = json.dumps({
-        "model": "llama-3.3-70b-versatile",
+        "model": settings.GROQ_MODEL,
         "messages": messages,
         "max_tokens": 800,
         "temperature": 0.7,

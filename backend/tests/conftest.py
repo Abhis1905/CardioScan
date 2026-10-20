@@ -37,10 +37,20 @@ test_engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
+from app.core.rate_limiter import rate_limiter_storage
+
 @pytest.fixture(scope="session", autouse=True)
 def init_ml():
     """Ensure ML models are initialized once for all tests."""
     ml_service.load_or_train()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Reset rate limiter state before each test so tests don't pollute each other."""
+    rate_limiter_storage.reset()
+    yield
+    rate_limiter_storage.reset()
 
 
 @pytest.fixture

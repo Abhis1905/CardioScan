@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { forgotPassword } from "../api";
-import { auth, sendPasswordResetEmail } from "../firebase";
+import { auth, sendPasswordResetEmail, isFirebaseConfigured } from "../firebase";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 function LeftPanel() {
@@ -148,15 +148,21 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      try {
-        await sendPasswordResetEmail(auth, email.trim());
-      } catch (fbErr) {
-        if (fbErr.code === "auth/invalid-email") {
-          toast.error(t("auth.invalid_email", "Please enter a valid email address."));
-          setLoading(false);
-          return;
+      if (isFirebaseConfigured && auth) {
+        try {
+          await sendPasswordResetEmail(auth, email.trim());
+        } catch (fbErr) {
+          if (fbErr.code === "auth/invalid-email") {
+            toast.error(t("auth.invalid_email", "Please enter a valid email address."));
+            setLoading(false);
+            return;
+          }
+          // Fallback for native CardioScan accounts
+          try {
+            await forgotPassword(email.trim());
+          } catch (_) {}
         }
-        // Fallback for native CardioScan accounts
+      } else {
         try {
           await forgotPassword(email.trim());
         } catch (_) {}

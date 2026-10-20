@@ -52,8 +52,12 @@ def get_current_user(
 def get_current_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Enforce administrator role for protected admin routes."""
-    if not current_user.email or current_user.email.lower() != settings.ADMIN_EMAIL.lower():
+    """
+    Enforce administrator authorization for protected admin routes.
+    Checks DB-backed role or verified environment ADMIN_EMAIL.
+    Fails closed with HTTP 403 Forbidden if not authorized or if admin is unconfigured.
+    """
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",

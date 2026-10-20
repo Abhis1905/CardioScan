@@ -7,6 +7,15 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.rate_limiter import (
+    get_client_ip,
+    rate_limit_forgot_password,
+    rate_limit_google,
+    rate_limit_login,
+    rate_limit_register,
+    rate_limit_reset_password,
+    rate_limit_turnstile,
+)
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.cleanup import PendingFirebaseCleanup
@@ -37,22 +46,10 @@ from app.services.turnstile import turnstile_service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _get_client_ip(request: Request) -> Optional[str]:
-    """Safely extract the client IP address from request headers or socket."""
-    if not request:
-        return None
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
-
-
-@router.post("/verify-turnstile")
+@router.post("/verify-turnstile", dependencies=[Depends(rate_limit_turnstile)])
 def verify_turnstile(payload: TurnstileVerifyRequest, request: Request):
     """Verify a standalone Cloudflare Turnstile token."""
-    client_ip = _get_client_ip(request)
+    client_ip = get_client_ip(request)
     is_valid, error_msg = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
     if not is_valid:
         return JSONResponse(
@@ -62,9 +59,9 @@ def verify_turnstile(payload: TurnstileVerifyRequest, request: Request):
     return {"success": True, "message": "Bot verification passed."}
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit_register)])
 def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
-    client_ip = _get_client_ip(request)
+    client_ip = get_client_ip(request)
     turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
     if not turnstile_valid:
         return JSONResponse(
@@ -137,9 +134,9 @@ def register(payload: UserRegister, request: Request, db: Session = Depends(get_
     }
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(rate_limit_login)])
 def login(payload: UserLogin, request: Request, db: Session = Depends(get_db)):
-    client_ip = _get_client_ip(request)
+    client_ip = get_client_ip(request)
     turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
     if not turnstile_valid:
         return JSONResponse(
@@ -251,7 +248,7 @@ def resend_verification(payload: ResendVerificationRequest, db: Session = Depend
     return {"message": "Verification email sent! Check your inbox (and spam folder)."}
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(rate_limit_forgot_password)])
 def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
@@ -265,7 +262,7 @@ def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db
     return {"message": "If this email is registered, a reset link has been sent."}
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(rate_limit_reset_password)])
 def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     token = payload.token
     new_password = payload.password
@@ -288,7 +285,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     return {"message": "Password reset successfully! You can now log in."}
 
 
-@router.post("/google")
+@router.post("/google", dependencies=[Depends(rate_limit_google)])
 def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
     token = payload.credential
     if not settings.GOOGLE_CLIENT_ID:
@@ -339,7 +336,7 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
         )
 
 
-@router.post("/firebase")
+@router.post("/firebase", dependencies=[Depends(rate_limit_login)])
 def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = Depends(get_db)):
     """
     Authenticate or register a user via Firebase ID Token.
@@ -355,7 +352,7 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
     6. If no user exists with this email, provisions a new verified user account with firebase_uid.
     7. Issues a standard CardioScan JWT (sub: user.id), preserving all downstream protected routes.
     """
-    client_ip = _get_client_ip(request)
+    client_ip = get_client_ip(request)
     turnstile_valid, turnstile_err = turnstile_service.verify_token(payload.turnstile_token, remote_ip=client_ip)
     if not turnstile_valid:
         return JSONResponse(

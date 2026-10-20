@@ -24,6 +24,7 @@ class User(Base):
     firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
     avatar = Column(String(500), nullable=True)
     is_verified = Column(Boolean, default=False, nullable=False)
+    role = Column(String(32), default="patient", nullable=True, index=True)
 
     # Demographic & Biometric Profile Baseline
     date_of_birth = Column(Date, nullable=True)
@@ -113,6 +114,21 @@ class User(Base):
             "domains": domains,
         }
 
+    @property
+    def is_admin(self) -> bool:
+        """
+        Evaluate admin status via explicit DB role or validated ADMIN_EMAIL configuration.
+        Fails safely if no admin email is configured and role is not explicitly 'admin' or 'superadmin'.
+        """
+        user_role = (self.role or "").strip().lower()
+        if user_role in ("admin", "superadmin"):
+            return True
+        from app.core.config import settings
+        admin_email = (settings.ADMIN_EMAIL or "").strip().lower()
+        if admin_email and self.email and self.email.strip().lower() == admin_email:
+            return True
+        return False
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize user model to frontend UserObject contract."""
         completion = self.get_profile_completion()
@@ -122,6 +138,8 @@ class User(Base):
             "name": self.name,
             "email": self.email,
             "avatar": self.avatar,
+            "role": self.role or "patient",
+            "is_admin": self.is_admin,
             "is_verified": self.is_verified,
             "consent_given": self.consent_given,
             "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,

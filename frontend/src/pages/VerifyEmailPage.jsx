@@ -386,7 +386,7 @@ export default function VerifyEmailPage() {
     setChecking(true);
     try {
       // If Firebase user is signed in on client
-      if (auth.currentUser) {
+      if (auth?.currentUser) {
         await auth.currentUser.reload();
         if (auth.currentUser.emailVerified) {
           if (user?.patient_id) {

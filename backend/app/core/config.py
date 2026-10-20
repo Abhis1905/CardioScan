@@ -72,6 +72,7 @@ class Settings(BaseSettings):
 
     # External APIs
     GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
     GOOGLE_CLIENT_ID: Optional[str] = None
 
     # Firebase Authentication
@@ -85,7 +86,32 @@ class Settings(BaseSettings):
     TURNSTILE_TIMEOUT_SECONDS: float = 8.0
 
     # Admin Management
-    ADMIN_EMAIL: str = "admin@example.com"
+    ADMIN_EMAIL: Optional[str] = None
+
+    # Reverse Proxy & Client IP Resolution
+    # On Render, 1 trusted reverse proxy hop sits in front of the application.
+    TRUSTED_PROXY_HOPS: int = 1
+
+    # Rate Limiting & Abuse Prevention
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN: int = 10          # Max attempts per window
+    RATE_LIMIT_LOGIN_WINDOW: int = 60   # Seconds
+    RATE_LIMIT_REGISTER: int = 5
+    RATE_LIMIT_REGISTER_WINDOW: int = 60
+    RATE_LIMIT_PREDICT: int = 30
+    RATE_LIMIT_PREDICT_WINDOW: int = 60
+    RATE_LIMIT_WHATIF: int = 60
+    RATE_LIMIT_WHATIF_WINDOW: int = 60
+    RATE_LIMIT_CHAT: int = 10
+    RATE_LIMIT_CHAT_WINDOW: int = 60
+    RATE_LIMIT_FORGOT_PASSWORD: int = 5
+    RATE_LIMIT_FORGOT_PASSWORD_WINDOW: int = 60
+    RATE_LIMIT_RESET_PASSWORD: int = 5
+    RATE_LIMIT_RESET_PASSWORD_WINDOW: int = 60
+    RATE_LIMIT_GOOGLE: int = 10
+    RATE_LIMIT_GOOGLE_WINDOW: int = 60
+    RATE_LIMIT_TURNSTILE: int = 30
+    RATE_LIMIT_TURNSTILE_WINDOW: int = 60
 
     # ML Training Data Path
     HEART_CSV_PATH: str = os.path.join(
@@ -141,6 +167,12 @@ class Settings(BaseSettings):
             )
         elif provider == "resend" and not (self.RESEND_API_KEY or "").strip():
             errors.append("RESEND_API_KEY is missing while EMAIL_PROVIDER is set to 'resend'.")
+
+        # 4. Admin safety notice
+        if not (self.ADMIN_EMAIL or "").strip():
+            logger.warning(
+                "ADMIN_EMAIL is not configured. Administrative routes will fail closed (HTTP 403) until an admin email is configured in environment."
+            )
 
         if errors:
             error_msg = "Production configuration validation failed:\n - " + "\n - ".join(errors)

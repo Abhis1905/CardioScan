@@ -220,7 +220,7 @@ export default function ProfilePage() {
     setDeleting(true);
     try {
       const res = await deleteAccount();
-      if (auth.currentUser) {
+      if (auth?.currentUser) {
         try {
           await auth.currentUser.delete();
         } catch (_) {}

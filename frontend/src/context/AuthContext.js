@@ -25,7 +25,9 @@ export function AuthProvider({ children }) {
   const logoutUser = () => {
     localStorage.removeItem("token");
     try {
-      signOut(auth).catch(() => {});
+      if (auth) {
+        signOut(auth).catch(() => {});
+      }
     } catch (_) {}
     setUser(null);
     window.location.href = "/";

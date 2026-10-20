@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -14,22 +14,44 @@ import {
   signOut,
 } from "firebase/auth";
 
+export const isFirebaseConfigured = Boolean(
+  process.env.REACT_APP_FIREBASE_API_KEY &&
+  process.env.REACT_APP_FIREBASE_PROJECT_ID
+);
+
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDmf8iFv7tOqN2syEFdhVLmdx7JEqJATF4",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "cardioscan-app.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "cardioscan-app",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "cardioscan-app.firebasestorage.app",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "479361637892",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:479361637892:web:25af22ef9961e6be851f51",
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-NMMDWC4NLJ",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "",
 };
 
-// Initialize Firebase App & Auth instance
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+let app = null;
+let auth = null;
+let googleProvider = null;
+
+if (isFirebaseConfigured) {
+  try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+  } catch (error) {
+    console.error("[CardioScan] Firebase initialization failed:", error);
+  }
+} else {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(
+      "[CardioScan] Firebase configuration missing. Social and Firebase auth features are disabled. Provide REACT_APP_FIREBASE_* variables in your environment."
+    );
+  }
+}
 
 export {
+  auth,
+  googleProvider,
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInWithEmailAndPassword,
@@ -43,3 +65,4 @@ export {
 };
 
 export default app;
+

@@ -200,7 +200,7 @@ def register():
     sent = send_verification_email(email, name, verify_token)
     if not sent:
         # Don't block registration if email fails — log it and continue
-        print(f"⚠️  Verification email failed for {email} — check GMAIL_USER/GMAIL_APP_PASSWORD env vars")
+        print(f"⚠️  Verification email failed for {email} — check SMTP_USER/SMTP_PASSWORD or RESEND_API_KEY env vars")
 
     return jsonify({
         "message": "Registration successful! Please check your email to verify your account.",
@@ -530,7 +530,7 @@ def chat():
     if not api_key:
         return jsonify({"error": "GROQ_API_KEY not set."}), 500
     payload = json.dumps({
-        "model": "llama-3.3-70b-versatile",
+        "model": os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
         "messages": [{"role": "system", "content": system_prompt}] + messages,
         "max_tokens": 800, "temperature": 0.7,
     }).encode("utf-8")
@@ -586,16 +586,19 @@ def list_models():
 
 
 # ── Admin Routes ──────────────────────────────────────────────────────────────
-ADMIN_EMAIL = "admin@example.com"
+ADMIN_EMAIL = (os.environ.get("ADMIN_EMAIL") or "").strip().lower()
 
 def admin_required(fn):
     from functools import wraps
     @wraps(fn)
     @jwt_required()
     def wrapper(*args, **kwargs):
+        admin_email = (os.environ.get("ADMIN_EMAIL") or "").strip().lower()
+        if not admin_email:
+            return jsonify({"error": "Admin access not configured"}), 403
         user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
-        if not user or user.email != ADMIN_EMAIL:
+        if not user or not user.email or user.email.strip().lower() != admin_email:
             return jsonify({"error": "Admin access required"}), 403
         return fn(*args, **kwargs)
     return wrapper
@@ -648,7 +651,8 @@ def admin_users():
 def admin_delete_user(uid):
     user = User.query.get(uid)
     if not user: return jsonify({"error": "User not found"}), 404
-    if user.email == ADMIN_EMAIL: return jsonify({"error": "Cannot delete admin"}), 400
+    if ADMIN_EMAIL and user.email and user.email.strip().lower() == ADMIN_EMAIL:
+        return jsonify({"error": "Cannot delete admin"}), 400
     db.session.delete(user); db.session.commit()
     return jsonify({"message": "User deleted"})
 

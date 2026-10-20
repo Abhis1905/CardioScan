@@ -2,8 +2,8 @@ import smtplib, os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-GMAIL_USER         = os.environ.get("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+GMAIL_USER         = os.environ.get("SMTP_USER") or os.environ.get("GMAIL_USER", "")
+GMAIL_APP_PASSWORD = os.environ.get("SMTP_PASSWORD") or os.environ.get("GMAIL_APP_PASSWORD", "")
 
 # ── Read frontend URL from env so it works on Railway + Vercel ────────────────
 # Set FRONTEND_URL=https://cardio-scan-lac.vercel.app in Railway environment vars
@@ -13,7 +13,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/
 def _send(to_email: str, subject: str, html: str) -> bool:
     """Shared SMTP sender. Returns True on success."""
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print("⚠️  GMAIL_USER or GMAIL_APP_PASSWORD env var not set — email skipped")
+        print("⚠️  SMTP_USER / GMAIL_USER or SMTP_PASSWORD / GMAIL_APP_PASSWORD env var not set — email skipped")
         return False
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
