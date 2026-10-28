@@ -156,8 +156,8 @@ export default function ResetPasswordPage() {
       toast.error(t("auth.passwords_do_not_match", "Passwords do not match."));
       return;
     }
-    if (form.password.length < 6) {
-      toast.error(t("auth.password_too_short", "Password must be at least 6 characters"));
+    if (form.password.length < 12) {
+      toast.error(t("auth.password_too_short", "Password must be at least 12 characters"));
       return;
     }
     setLoading(true);
@@ -429,10 +429,10 @@ export default function ResetPasswordPage() {
                 <div className="flex items-center gap-2 pt-0.5 text-xs text-[#52665A] dark:text-[#B2B7BB]">
                   <span
                     className={`inline-block w-2 h-2 rounded-full transition-colors ${
-                      form.password.length >= 6 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
+                      form.password.length >= 12 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
                     }`}
                   />
-                  <span>{t("auth.password_min_length", "Must be at least 6 characters")}</span>
+                  <span>{t("auth.password_min_length", "Must be at least 12 characters")}</span>
                 </div>
               </div>
 
@@ -486,7 +486,7 @@ export default function ResetPasswordPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading || form.password.length < 6 || form.password !== form.confirm}
+                  disabled={loading || form.password.length < 12 || form.password !== form.confirm}
                   className="w-full h-11 rounded-xl glossy-btn-primary text-white text-sm font-semibold transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#35483E]/30 focus:ring-offset-2"
                 >
                   {loading ? (

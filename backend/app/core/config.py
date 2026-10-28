@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Security & Auth
     JWT_SECRET: str = "cardioscan-dev-secret-key-change-in-production-min32chars"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 120  # 2 hours (hardened from 24h)
 
     # Token Lifespans
     VERIFY_TOKEN_TTL_HOURS: int = 24

@@ -28,7 +28,7 @@ def test_register_duplicate_email(client, test_user):
     payload = {
         "name": "Duplicate User",
         "email": test_user.email,
-        "password": "password123",
+        "password": "ValidPassword123!",
     }
     response = client.post("/auth/register", json=payload)
     assert response.status_code == 409
@@ -50,7 +50,7 @@ def test_register_email_failure_rolls_back(client, db_session):
     payload = {
         "name": "Failed Email User",
         "email": "fail@example.com",
-        "password": "password123",
+        "password": "ValidPassword123!",
     }
     with patch("app.api.auth.email_service.send_verification_email", return_value=(False, "SMTP Timeout")):
         response = client.post("/auth/register", json=payload)
@@ -186,3 +186,133 @@ def test_delete_account(client, auth_headers, db_session, test_user):
     # Confirm user is removed from database
     user = db_session.query(User).filter(User.id == test_user.id).first()
     assert user is None
+
+
+def test_logout_revokes_jwt_server_side(client, test_user):
+    """Test that POST /auth/logout increments token_version and invalidates the session server-side."""
+    # 1. Log in to get token
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_resp.status_code == 200
+    token = login_resp.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2. Token works initially
+    me_resp = client.get("/auth/me", headers=headers)
+    assert me_resp.status_code == 200
+
+    # 3. Perform server-side logout
+    logout_resp = client.post("/auth/logout", headers=headers)
+    assert logout_resp.status_code == 200
+    assert logout_resp.json()["message"] == "Logged out successfully"
+
+    # 4. Same token is now rejected immediately server-side
+    me_after_logout = client.get("/auth/me", headers=headers)
+    assert me_after_logout.status_code == 401
+    assert "Could not validate credentials" in me_after_logout.json()["detail"]
+
+    # 5. User can log in again to receive a fresh token with incremented token_version
+    relogin_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert relogin_resp.status_code == 200
+    new_token = relogin_resp.json()["token"]
+    assert new_token != token
+    assert client.get("/auth/me", headers={"Authorization": f"Bearer {new_token}"}).status_code == 200
+
+
+def test_password_reset_invalidates_all_active_sessions(client, test_user, db_session):
+    """Test that resetting a password increments token_version and revokes all previous JWTs."""
+    # 1. Login to obtain an active token
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_resp.status_code == 200
+    old_token = login_resp.json()["token"]
+    old_headers = {"Authorization": f"Bearer {old_token}"}
+    assert client.get("/auth/me", headers=old_headers).status_code == 200
+
+    # 2. Request and execute password reset
+    raw_token = create_password_reset_token(test_user, db_session)
+    new_pw = "BrandNewSecurePassword123!"
+    reset_resp = client.post("/auth/reset-password", json={"token": raw_token, "password": new_pw})
+    assert reset_resp.status_code == 200
+
+    # 3. Old token is now rejected
+    assert client.get("/auth/me", headers=old_headers).status_code == 401
+
+    # 4. Old password cannot log in
+    assert client.post("/auth/login", json={"email": test_user.email, "password": "password123"}).status_code == 401
+
+    # 5. New password logs in with updated token_version
+    new_login = client.post("/auth/login", json={"email": test_user.email, "password": new_pw})
+    assert new_login.status_code == 200
+    new_token = new_login.json()["token"]
+    assert client.get("/auth/me", headers={"Authorization": f"Bearer {new_token}"}).status_code == 200
+
+
+def test_inactive_account_blocked(client, test_user, db_session):
+    """Test that deactivated accounts cannot log in or use existing validly-signed tokens."""
+    # 1. Log in while active
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_resp.status_code == 200
+    token = login_resp.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    assert client.get("/auth/me", headers=headers).status_code == 200
+
+    # 2. Deactivate user account
+    test_user.is_active = False
+    db_session.commit()
+    db_session.refresh(test_user)
+
+    # 3. Existing token rejected immediately
+    assert client.get("/auth/me", headers=headers).status_code == 401
+
+    # 4. Login attempt rejected with inactive account notice
+    login_attempt = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_attempt.status_code == 401
+    assert "inactive" in login_attempt.json()["error"].lower()
+
+
+def test_password_policy_enforcement_on_register(client):
+    """Test that register enforces minimum 12 chars, blocklist, diversity, and allows passphrases."""
+    # 1. Too short (< 12 chars)
+    r1 = client.post("/auth/register", json={"name": "U", "email": "p1@example.com", "password": "short"})
+    assert r1.status_code == 400
+    assert "at least 12 characters" in r1.json()["error"].lower()
+
+    # 2. Blocklisted common password
+    r2 = client.post("/auth/register", json={"name": "U", "email": "p2@example.com", "password": "password12345"})
+    assert r2.status_code == 400
+    assert "common or easily guessable" in r2.json()["error"].lower()
+
+    # 3. Low character diversity
+    r3 = client.post("/auth/register", json={"name": "U", "email": "p3@example.com", "password": "aaaaaaaaaaaa"})
+    assert r3.status_code == 400
+    assert "too simple" in r3.json()["error"].lower()
+
+    # 4. Trivial root with trailing symbols
+    r4 = client.post("/auth/register", json={"name": "U", "email": "p4@example.com", "password": "password999999!"})
+    assert r4.status_code == 400
+    assert "common or easily guessable" in r4.json()["error"].lower()
+
+    # 5. Multi-word passphrase with spaces is accepted
+    r5 = client.post("/auth/register", json={"name": "Passphrase User", "email": "passphrase@example.com", "password": "correct horse battery staple"})
+    assert r5.status_code == 201
+    assert "Registration successful" in r5.json()["message"]
+
+
+def test_password_policy_enforcement_on_reset(client, test_user, db_session):
+    """Test that reset-password endpoint also strictly enforces the strong password policy."""
+    raw_token = create_password_reset_token(test_user, db_session)
+
+    # 1. Reset with short password fails
+    r_short = client.post("/auth/reset-password", json={"token": raw_token, "password": "short"})
+    assert r_short.status_code == 400
+    assert "at least 12 characters" in r_short.json()["error"].lower()
+
+    # 2. Reset with common password fails
+    r_common = client.post("/auth/reset-password", json={"token": raw_token, "password": "password12345"})
+    assert r_common.status_code == 400
+    assert "common or easily guessable" in r_common.json()["error"].lower()
+
+    # 3. Reset with valid strong password succeeds
+    r_valid = client.post("/auth/reset-password", json={"token": raw_token, "password": "ValidStrongPassword2026!"})
+    assert r_valid.status_code == 200
+    assert "Password reset successfully" in r_valid.json()["message"]
+

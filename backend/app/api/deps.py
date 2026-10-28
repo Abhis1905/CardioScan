@@ -33,6 +33,19 @@ def get_current_user_optional(
         return None
 
     user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None
+
+    # Inactive accounts cannot authenticate
+    if not getattr(user, "is_active", True):
+        return None
+
+    # Verify token version matches user's current token_version
+    token_version = payload.get("tv")
+    user_token_version = getattr(user, "token_version", 1)
+    if token_version is None or token_version != user_token_version:
+        return None
+
     return user
 
 

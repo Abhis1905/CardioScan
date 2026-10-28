@@ -215,7 +215,7 @@ def test_registration_rollback_on_resend_failure(client, db_session, monkeypatch
     payload = {
         "name": "Failed Registration User",
         "email": "failed.user@example.com",
-        "password": "Password123!",
+        "password": "StrongSecurePassword123!",
     }
 
     response = client.post("/auth/register", json=payload)

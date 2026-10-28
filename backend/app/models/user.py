@@ -26,6 +26,10 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     role = Column(String(32), default="patient", nullable=True, index=True)
 
+    # Session & Account Security
+    token_version = Column(Integer, default=1, nullable=False, server_default="1")
+    is_active = Column(Boolean, default=True, nullable=False, server_default="true")
+
     # Demographic & Biometric Profile Baseline
     date_of_birth = Column(Date, nullable=True)
     height = Column(Float, nullable=True)  # in centimeters (cm)
@@ -141,6 +145,7 @@ class User(Base):
             "role": self.role or "patient",
             "is_admin": self.is_admin,
             "is_verified": self.is_verified,
+            "is_active": getattr(self, "is_active", True),
             "consent_given": self.consent_given,
             "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,
             "age": self.calculate_age(),

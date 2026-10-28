@@ -7,7 +7,7 @@ from app.schemas.user import UserResponse
 class UserRegister(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str
     turnstile_token: Optional[str] = Field(None, description="Cloudflare Turnstile verification token")
 
 
@@ -36,7 +36,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str = Field(..., min_length=6)
+    password: str
 
 
 class ResendVerificationRequest(BaseModel):

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getMe } from "../api";
+import { getMe, logout } from "../api";
 import { auth, signOut } from "../firebase";
 
 const AuthContext = createContext(null);
@@ -22,7 +22,10 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
-  const logoutUser = () => {
+  const logoutUser = async () => {
+    try {
+      await logout();
+    } catch (_) {}
     localStorage.removeItem("token");
     try {
       if (auth) {

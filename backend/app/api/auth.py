@@ -16,6 +16,7 @@ from app.core.rate_limiter import (
     rate_limit_reset_password,
     rate_limit_turnstile,
 )
+from app.core.password_policy import validate_password_strength
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.cleanup import PendingFirebaseCleanup
@@ -79,10 +80,11 @@ def register(payload: UserRegister, request: Request, db: Session = Depends(get_
             content={"error": "Name, email and password are required"},
         )
 
-    if len(password) < 6:
+    valid, err_msg = validate_password_strength(password)
+    if not valid:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": "Password must be at least 6 characters"},
+            content={"error": err_msg},
         )
 
     existing_user = db.query(User).filter(User.email == email).first()
@@ -99,6 +101,8 @@ def register(payload: UserRegister, request: Request, db: Session = Depends(get_
         email=email,
         password_hash=pw_hash,
         is_verified=False,
+        token_version=1,
+        is_active=True,
     )
     db.add(user)
     try:
@@ -154,6 +158,12 @@ def login(payload: UserLogin, request: Request, db: Session = Depends(get_db)):
             content={"error": "Invalid email or password"},
         )
 
+    if not getattr(user, "is_active", True):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Account is inactive. Please contact support."},
+        )
+
     if not user.is_verified:
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -168,7 +178,10 @@ def login(payload: UserLogin, request: Request, db: Session = Depends(get_db)):
     if not user.patient_id:
         assign_patient_id(user, db)
 
-    token = create_access_token(subject=user.id)
+    token = create_access_token(
+        subject=user.id,
+        token_version=getattr(user, "token_version", 1) or 1,
+    )
     return {
         "token": token,
         "user": user.to_dict(),
@@ -200,7 +213,10 @@ def verify_email(token: str = Query("", description="Verification token"), db: S
         )
 
     # Issue JWT upon verification
-    jwt_token = create_access_token(subject=user.id)
+    jwt_token = create_access_token(
+        subject=user.id,
+        token_version=getattr(user, "token_version", 1) or 1,
+    )
 
     # Optional welcome email
     email_service.send_welcome_email(user.email, user.name)
@@ -267,10 +283,11 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     token = payload.token
     new_password = payload.password
 
-    if len(new_password) < 6:
+    valid, err_msg = validate_password_strength(new_password)
+    if not valid:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": "Password must be at least 6 characters"},
+            content={"error": err_msg},
         )
 
     success, user, error_msg = verify_password_reset_token(token, db)
@@ -312,11 +329,18 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
                 google_id=google_id,
                 avatar=avatar,
                 is_verified=True,
+                token_version=1,
+                is_active=True,
             )
             db.add(user)
             db.commit()
             db.refresh(user)
         else:
+            if not getattr(user, "is_active", True):
+                return JSONResponse(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    content={"error": "Account is inactive. Please contact support."},
+                )
             if not user.google_id:
                 user.google_id = google_id
                 user.avatar = avatar
@@ -327,7 +351,10 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
         if user.is_verified and not user.patient_id:
             assign_patient_id(user, db)
 
-        jwt_token = create_access_token(subject=user.id)
+        jwt_token = create_access_token(
+            subject=user.id,
+            token_version=getattr(user, "token_version", 1) or 1,
+        )
         return {"token": jwt_token, "user": user.to_dict()}
     except Exception as e:
         return JSONResponse(
@@ -402,6 +429,11 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
     # 1. Check if user already exists by firebase_uid
     user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
     if user:
+        if not getattr(user, "is_active", True):
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": "Account is inactive. Please contact support."},
+            )
         avatar = decoded.get("picture")
         if avatar and not user.avatar:
             user.avatar = avatar
@@ -413,7 +445,10 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
         if not user.patient_id:
             assign_patient_id(user, db)
 
-        jwt_token = create_access_token(subject=user.id)
+        jwt_token = create_access_token(
+            subject=user.id,
+            token_version=getattr(user, "token_version", 1) or 1,
+        )
         return {
             "token": jwt_token,
             "user": user.to_dict(),
@@ -441,6 +476,8 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
         firebase_uid=firebase_uid,
         avatar=avatar,
         is_verified=True,
+        token_version=1,
+        is_active=True,
     )
     db.add(new_user)
     try:
@@ -457,7 +494,10 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
             },
         )
 
-    jwt_token = create_access_token(subject=new_user.id)
+    jwt_token = create_access_token(
+        subject=new_user.id,
+        token_version=getattr(new_user, "token_version", 1) or 1,
+    )
     return {
         "token": jwt_token,
         "user": new_user.to_dict(),
@@ -468,6 +508,17 @@ def firebase_auth(payload: FirebaseAuthRequest, request: Request, db: Session = 
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user.to_dict()
+
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Server-side logout invalidating all JWT access tokens issued under the current token_version.
+    """
+    current_user.token_version = (getattr(current_user, "token_version", 1) or 1) + 1
+    db.commit()
+    db.refresh(current_user)
+    return {"message": "Logged out successfully"}
 
 
 @router.post("/record-consent")

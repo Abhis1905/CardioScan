@@ -102,9 +102,10 @@ def verify_password_reset_token(raw_token: str, db: Session) -> Tuple[bool, Opti
 
 
 def consume_password_reset_token(user: User, new_password_hash: str, db: Session) -> None:
-    """Set new password and invalidate reset token immediately (single-use)."""
+    """Set new password, invalidate reset token immediately, and revoke all active sessions."""
     user.password_hash = new_password_hash
     user.reset_token_hash = None
     user.reset_token_expires = None
+    user.token_version = (getattr(user, "token_version", 1) or 1) + 1
     db.commit()
     db.refresh(user)

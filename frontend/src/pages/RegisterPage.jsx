@@ -204,8 +204,8 @@ export default function RegisterPage() {
       toast.error(t("auth.must_agree_terms", "Please accept the Terms & Conditions and Privacy Policy."));
       return;
     }
-    if (form.password.length < 6) {
-      toast.error(t("auth.password_too_short", "Password must be at least 6 characters"));
+    if (form.password.length < 12) {
+      toast.error(t("auth.password_too_short", "Password must be at least 12 characters"));
       return;
     }
     setLoading(true);
@@ -621,10 +621,10 @@ export default function RegisterPage() {
                 <p className="text-[12px] text-[#52665A] dark:text-[#B2B7BB] flex items-center gap-1.5 pt-0.5">
                   <span
                     className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
-                      form.password.length >= 6 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
+                      form.password.length >= 12 ? "bg-[#35483E] dark:bg-[#789580]" : "bg-[#D9A19A]"
                     }`}
                   />
-                  <span>{t("auth.password_min_length", "Must be at least 6 characters")}</span>
+                  <span>{t("auth.password_min_length", "Must be at least 12 characters")}</span>
                 </p>
               </div>
 
