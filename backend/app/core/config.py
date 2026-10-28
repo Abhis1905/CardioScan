@@ -114,6 +114,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_TURNSTILE_WINDOW: int = 60
     RATE_LIMIT_REPORTS: int = 30
     RATE_LIMIT_REPORTS_WINDOW: int = 60
+    RATE_LIMIT_LOGOUT: int = 20
+    RATE_LIMIT_LOGOUT_WINDOW: int = 60
 
     # ML Training Data Path
     HEART_CSV_PATH: str = os.path.join(

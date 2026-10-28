@@ -25,7 +25,7 @@ export const listModels = () => API.get("/models");
 export const chatWithBot = (system, messages) => API.post("/chat", { system, messages });
 export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
-export const logout = () => API.post("/auth/logout");
+export const logout = () => API.post("/auth/logout", {}, { timeout: 3500 });
 export const googleAuth = (credential) => API.post("/auth/google", { credential });
 export const verifyTurnstile = (turnstileToken) => API.post("/auth/verify-turnstile", { turnstile_token: turnstileToken });
 export const firebaseAuth = (idToken, turnstileToken) => API.post("/auth/firebase", { id_token: idToken, turnstile_token: turnstileToken });

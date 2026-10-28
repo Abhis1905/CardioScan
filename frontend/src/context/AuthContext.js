@@ -23,9 +23,13 @@ export function AuthProvider({ children }) {
   };
 
   const logoutUser = async () => {
+    let serverRevocationFailed = false;
     try {
       await logout();
-    } catch (_) {}
+    } catch (err) {
+      serverRevocationFailed = true;
+      console.warn("Server-side token revocation failed or timed out during logout:", err?.message || err);
+    }
     localStorage.removeItem("token");
     try {
       if (auth) {
@@ -33,6 +37,9 @@ export function AuthProvider({ children }) {
       }
     } catch (_) {}
     setUser(null);
+    if (serverRevocationFailed) {
+      sessionStorage.setItem("session_notice", "offline_logout");
+    }
     window.location.href = "/";
   };
 

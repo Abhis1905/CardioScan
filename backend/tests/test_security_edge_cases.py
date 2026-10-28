@@ -114,3 +114,56 @@ def test_firebase_token_rejected_on_bearer_auth(client):
     res = client.get("/auth/me", headers={"Authorization": f"Bearer {fake_firebase_token}"})
     assert res.status_code == 401
 
+
+def test_jwt_fail_closed_on_null_user_token_version():
+    """SEC-02-05: If user.token_version is unexpectedly NULL or missing, auth fails closed."""
+    from unittest.mock import MagicMock
+    from app.api.deps import get_current_user_optional
+    from fastapi.security import HTTPAuthorizationCredentials
+
+    token = create_access_token(subject=1, token_version=1)
+
+    # 1. User has NULL token_version in DB -> fails closed
+    db = MagicMock()
+    mock_user = MagicMock()
+    mock_user.id = 1
+    mock_user.is_active = True
+    mock_user.token_version = None
+    db.query().filter().first.return_value = mock_user
+
+    auth = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+    assert get_current_user_optional(auth=auth, db=db) is None
+
+    # 2. User has token_version=1, but token has tv=None in payload -> fails closed
+    with patch("app.api.deps.decode_access_token", return_value={"sub": "1", "tv": None}):
+        mock_user.token_version = 1
+        assert get_current_user_optional(auth=auth, db=db) is None
+
+
+def test_logout_atomic_increment(client, test_user, db_session):
+    """SEC-02-04: Logout atomically increments token_version."""
+    initial_version = test_user.token_version
+    token = create_access_token(subject=test_user.id, token_version=initial_version)
+
+    res = client.post("/auth/logout", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+
+    db_session.refresh(test_user)
+    assert test_user.token_version == initial_version + 1
+
+
+def test_alembic_offline_sql_generation():
+    """SEC-02-07: Alembic offline --sql generation succeeds without requiring live reflection."""
+    import os
+    import subprocess
+    result = subprocess.run(
+        ["backend/venv/bin/alembic", "-c", "backend/alembic.ini", "upgrade", "h4c5d6e7f8a9:i5d6e7f8a9b0", "--sql"],
+        env=dict(os.environ, PYTHONPATH="backend"),
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "ALTER TABLE users ADD COLUMN token_version" in result.stdout
+    assert "ALTER TABLE users ADD COLUMN is_active" in result.stdout
+
+

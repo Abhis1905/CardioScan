@@ -336,3 +336,10 @@ rate_limit_reports = RateLimiter(
     limit=lambda: getattr(settings, "RATE_LIMIT_REPORTS", 30),
     window_seconds=lambda: getattr(settings, "RATE_LIMIT_REPORTS_WINDOW", 60),
 )
+
+rate_limit_logout = RateLimiter(
+    "logout",
+    limit=lambda: getattr(settings, "RATE_LIMIT_LOGOUT", 20),
+    window_seconds=lambda: getattr(settings, "RATE_LIMIT_LOGOUT_WINDOW", 60),
+    prefer_user_identity=True,
+)

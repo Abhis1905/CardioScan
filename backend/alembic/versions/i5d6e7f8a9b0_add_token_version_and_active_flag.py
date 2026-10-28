@@ -20,13 +20,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # 1. Add token_version and is_active columns with server defaults
-    with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column('token_version', sa.Integer(), nullable=False, server_default='1')
-        )
-        batch_op.add_column(
-            sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.sql.expression.true())
-        )
+    op.add_column(
+        'users',
+        sa.Column('token_version', sa.Integer(), nullable=False, server_default='1'),
+    )
+    op.add_column(
+        'users',
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.sql.expression.true()),
+    )
 
     # 2. Backfill any existing users if NULL
     from alembic import context
@@ -40,3 +41,4 @@ def downgrade() -> None:
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.drop_column('is_active')
         batch_op.drop_column('token_version')
+

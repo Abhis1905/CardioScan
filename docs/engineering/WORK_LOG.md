@@ -1,42 +1,50 @@
 # CardioScan Engineering Work Log
 
-## Security Fix 02 — Session Revocation & Password Hardening
+## Security Fix 02 — Session Revocation & Password Hardening (Remediation Phase)
 **Date:** October 28, 2026  
-**Branch:** `security/fix-02-session-password-hardening`  
-**Base Commit:** `ffe3642` (`security/fix-01-report-privacy`)  
-**Scope:** Backend & Frontend Session Security, Password Policy, Token Revocation, Inactive Account Handling
+**Active Branch:** `security/fix-02-hardening-remediation`  
+**Base Branch:** `security/fix-02-session-password-hardening` (commit `d6ddaee`)  
+**Scope:** Remediated all 9 findings from the adversarial security audit of Fix 02 across backend, frontend, migrations, and test suites.
 
-### Summary of Changes
+### Summary of Remediations
 
-1. **Password Policy Engine (`backend/app/core/password_policy.py`):**
-   - Implemented `validate_password_strength()` enforcing 12–128 character limits.
-   - Case-insensitive blocklist check against common dictionary and breach passwords.
-   - Low diversity and trivial root checks.
-   - Support for multi-word passphrases with whitespace.
-   - Integrated with `POST /auth/register` and `POST /auth/reset-password`.
+1. **SEC-02-01 (Whitespace-Padded Passwords & Passphrase Preservation):**
+   - In `backend/app/core/password_policy.py`, evaluates `len(password.strip()) >= 12` so inputs like `"      cat   "` and `"         abc"` are rejected immediately.
+   - Raw `password` is preserved for Argon2id hashing in `auth.py`, preserving natural internal spaces in passphrases (`"correct horse battery staple"`).
 
-2. **Database Schema & Session Migration (`backend/alembic/versions/i5d6e7f8a9b0_...`):**
-   - Added `token_version` (Integer, default 1, nullable=False) to `users`.
-   - Added `is_active` (Boolean, default True, nullable=False) to `users`.
-   - Created migration `i5d6e7f8a9b0_add_token_version_and_active_flag.py` descending from `h4c5d6e7f8a9`.
+2. **SEC-02-02 (Inactive Account Enforcement Across Auth Flows):**
+   - In `backend/app/api/auth.py` and `backend/app/services/tokens.py`:
+     - `POST /auth/forgot-password`: Inactive accounts return generic benign message without generating reset tokens or dispatching emails.
+     - `POST /auth/reset-password`: Inactive accounts fail closed with HTTP 401 Unauthorized (`"Account is inactive"`).
+     - `GET /auth/verify-email`: Inactive accounts fail closed with HTTP 401 Unauthorized without session issuance.
+     - `POST /auth/resend-verification`: Inactive accounts return benign enumeration-safe response without dispatching emails.
 
-3. **Token Lifecycle & Security Configuration (`backend/app/core/config.py`, `security.py`):**
-   - Reduced `ACCESS_TOKEN_EXPIRE_MINUTES` to 120 (2 hours).
-   - Added `tv` (token_version) and `jti` (unique token ID) claims to `create_access_token()`.
+3. **SEC-02-03 (Rate Limiting on Logout):**
+   - Configured `RATE_LIMIT_LOGOUT = 20` and `RATE_LIMIT_LOGOUT_WINDOW = 60` in `config.py` and `rate_limiter.py`.
+   - Added `dependencies=[Depends(rate_limit_logout)]` to `POST /auth/logout`.
 
-4. **Dependency & Invalidation Logic (`backend/app/api/deps.py`, `auth.py`, `tokens.py`):**
-   - Hardened `get_current_user_optional` to verify `is_active` and strict match on `token_version`.
-   - Added `POST /auth/logout` to increment `current_user.token_version` on demand.
-   - Updated `consume_password_reset_token` to increment `token_version` on password reset.
-   - Updated all token issuance calls (`login`, `verify_email`, `google`, `firebase`) to include current `token_version`.
-   - Enforced `is_active` checks in `login`, `google_auth`, and `firebase_auth`.
+4. **SEC-02-04 (Atomic SQL Token Version Increments):**
+   - Converted `logout` and `consume_password_reset_token` to use `func.coalesce(User.token_version, 1) + 1` via SQLAlchemy atomic update queries to eliminate concurrency race conditions.
 
-5. **Frontend Client Alignment (`frontend/src/...`):**
-   - Exported `logout` in `api.js`.
-   - Updated `logoutUser` in `AuthContext.js` to call server-side logout before clearing local state.
-   - Updated `RegisterPage.jsx` and `ResetPasswordPage.jsx` password length validations, requirements text, and button state conditions from 6 to 12 characters.
+5. **SEC-02-05 (Fail-Closed Handling of NULL Token Versions):**
+   - In `backend/app/api/deps.py`, updated `user_token_version = getattr(user, "token_version", None)`. If `token_version is None`, `user_token_version is None`, or versions mismatch, authentication fails closed immediately.
 
-6. **Test Verification:**
-   - 159 backend tests passing (including 9 new targeted security tests).
-   - 9 frontend report tests passing.
-   - Clean production build (`npm run build`).
+6. **SEC-02-06 (Frontend Logout Timeout & Failure Resilience):**
+   - Configured `timeout: 3500` in `frontend/src/api.js` for `logout()`.
+   - In `frontend/src/context/AuthContext.js`, `logoutUser` catches server timeouts/errors, logs a console warning, sets `sessionStorage.setItem("session_notice", "offline_logout")`, and immediately purges local tokens and state.
+
+7. **SEC-02-07 (Alembic Offline `--sql` Support):**
+   - Updated `backend/alembic/versions/i5d6e7f8a9b0_add_token_version_and_active_flag.py` to use direct `op.add_column()` instead of batch mode for upgrade, enabling clean offline SQL generation for PostgreSQL and SQLite.
+
+8. **SEC-02-08 (Accurate JTI vs Version Revocation Documentation):**
+   - Documented that `jti` provides cryptographic token entropy/anti-collision uniqueness, while session revocation is version-based via `token_version` (not a distributed per-JTI denylist).
+
+9. **SEC-02-09 (128/129-Character Password Boundary Tests):**
+   - Added tests verifying 128 characters is accepted and 129 characters is rejected on registration and password reset.
+
+### Test Verification
+
+- **Backend:** 167 tests passed (0 failures, 0 skipped).
+- **Frontend:** 9 tests passed.
+- **Frontend Build:** Successfully created production build (`npm run build`).
+- **Alembic:** Offline `--sql` generation and full migration upgrade/downgrade verified.

@@ -56,13 +56,17 @@ def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
     if not password:
         return False, "Password is required."
 
-    if len(password) < 12:
-        return False, "Password must be at least 12 characters long."
+    stripped = password.strip()
+    if not stripped:
+        return False, "Password is required."
+
+    if len(stripped) < 12:
+        return False, "Password must be at least 12 characters long (excluding leading or trailing whitespace)."
 
     if len(password) > 128:
         return False, "Password cannot exceed 128 characters."
 
-    lowered = password.lower().strip()
+    lowered = stripped.lower()
 
     # 1. Exact match against common blocklist
     if lowered in COMMON_PASSWORDS:

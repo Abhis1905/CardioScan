@@ -316,3 +316,134 @@ def test_password_policy_enforcement_on_reset(client, test_user, db_session):
     assert r_valid.status_code == 200
     assert "Password reset successfully" in r_valid.json()["message"]
 
+
+def test_password_policy_whitespace_padding_and_passphrase(client, db_session):
+    """SEC-02-01: Whitespace padding cannot bypass min length; internal passphrase spaces are preserved."""
+    # 1. Padded short passwords (< 12 chars when stripped) must be rejected
+    r1 = client.post("/auth/register", json={"name": "Padded", "email": "pad1@example.com", "password": "      cat   "})
+    assert r1.status_code == 400
+    assert "at least 12 characters" in r1.json()["error"].lower()
+
+    r2 = client.post("/auth/register", json={"name": "Padded", "email": "pad2@example.com", "password": "         abc"})
+    assert r2.status_code == 400
+    assert "at least 12 characters" in r2.json()["error"].lower()
+
+    # 2. Padded blocklisted password rejected
+    r3 = client.post("/auth/register", json={"name": "Padded", "email": "pad3@example.com", "password": "   password12345   "})
+    assert r3.status_code == 400
+    assert "common or easily guessable" in r3.json()["error"].lower()
+
+    # 3. Multi-word passphrase with internal spaces is preserved in hash
+    passphrase = "correct horse battery staple"
+    r4 = client.post("/auth/register", json={"name": "Passphrase User", "email": "passphrase_exact@example.com", "password": passphrase})
+    assert r4.status_code == 201
+
+    user = db_session.query(User).filter(User.email == "passphrase_exact@example.com").first()
+    user.is_verified = True
+    db_session.commit()
+
+    # Exact passphrase logs in
+    login_ok = client.post("/auth/login", json={"email": user.email, "password": passphrase})
+    assert login_ok.status_code == 200
+
+    # Passphrase without internal spaces is rejected
+    login_fail = client.post("/auth/login", json={"email": user.email, "password": "correcthorsebatterystaple"})
+    assert login_fail.status_code == 401
+
+
+def test_password_length_boundary_128_and_129(client, test_user, db_session):
+    """SEC-02-09: 128 chars is accepted; 129 chars is rejected on registration and reset."""
+    pw_128 = "A" * 32 + "b" * 32 + "1" * 32 + "!" * 32  # length 128, diverse
+    pw_129 = pw_128 + "x"  # length 129
+
+    # 1. 129 chars on register -> rejected
+    r_reg_129 = client.post("/auth/register", json={"name": "Boundary", "email": "b129@example.com", "password": pw_129})
+    assert r_reg_129.status_code == 400
+    assert "cannot exceed 128 characters" in r_reg_129.json()["error"].lower()
+
+    # 2. 128 chars on register -> accepted
+    r_reg_128 = client.post("/auth/register", json={"name": "Boundary", "email": "b128@example.com", "password": pw_128})
+    assert r_reg_128.status_code == 201
+
+    # 3. 129 chars on reset -> rejected
+    raw_token = create_password_reset_token(test_user, db_session)
+    r_reset_129 = client.post("/auth/reset-password", json={"token": raw_token, "password": pw_129})
+    assert r_reset_129.status_code == 400
+    assert "cannot exceed 128 characters" in r_reset_129.json()["error"].lower()
+
+    # 4. 128 chars on reset -> accepted
+    r_reset_128 = client.post("/auth/reset-password", json={"token": raw_token, "password": pw_128})
+    assert r_reset_128.status_code == 200
+    assert "Password reset successfully" in r_reset_128.json()["message"]
+
+
+def test_inactive_account_forgot_and_reset_flow(client, test_user, db_session):
+    """SEC-02-02: Inactive accounts cannot reset credentials or trigger password reset emails."""
+    from app.services.email import email_service
+    test_user.is_active = False
+    db_session.commit()
+
+    with patch.object(email_service, "send_password_reset_email") as mock_email:
+        # 1. Forgot password returns generic benign response
+        resp = client.post("/auth/forgot-password", json={"email": test_user.email})
+        assert resp.status_code == 200
+        assert "If this email is registered" in resp.json()["message"]
+        # No email sent and no token created in DB
+        assert mock_email.called is False
+        db_session.refresh(test_user)
+        assert test_user.reset_token_hash is None
+
+    # 2. Even if a reset token existed prior to deactivation, reset-password fails closed
+    raw_token = create_password_reset_token(test_user, db_session)
+    reset_resp = client.post("/auth/reset-password", json={"token": raw_token, "password": "NewStrongPass2026!"})
+    assert reset_resp.status_code == 401
+    assert "inactive" in reset_resp.json()["error"].lower()
+
+
+def test_inactive_account_email_verification_flow(client, test_user, db_session):
+    """SEC-02-02: Inactive accounts cannot verify email or resend verification emails."""
+    from app.services.email import email_service
+    test_user.is_active = False
+    test_user.is_verified = False
+    raw_token = create_verification_token(test_user, db_session)
+
+    # 1. Verify email returns 401 Unauthorized, does not issue token
+    res = client.get(f"/auth/verify-email?token={raw_token}")
+    assert res.status_code == 401
+    assert "inactive" in res.json()["error"].lower()
+
+    # 2. Resend verification returns benign message without sending email
+    with patch.object(email_service, "send_verification_email") as mock_email:
+        resend_resp = client.post("/auth/resend-verification", json={"email": test_user.email})
+        assert resend_resp.status_code == 200
+        assert "If this email is registered" in resend_resp.json()["message"]
+        assert mock_email.called is False
+
+
+def test_logout_rate_limiting(client, test_user):
+    """SEC-02-03: POST /auth/logout is rate-limited to 20 calls per 60s."""
+    from app.core.rate_limiter import rate_limiter_storage
+    rate_limiter_storage.reset()
+
+    # Log in to get token
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_resp.status_code == 200
+    token = login_resp.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # First call succeeds
+    res1 = client.post("/auth/logout", headers=headers)
+    assert res1.status_code == 200
+
+    # Next 19 calls (within 60s) consume remaining quota
+    for _ in range(19):
+        client.post("/auth/logout", headers=headers)
+
+    # 21st call hits rate limit 429
+    res_limited = client.post("/auth/logout", headers=headers)
+    assert res_limited.status_code == 429
+    assert "Too many requests" in res_limited.json()["detail"]["error"]
+
+    rate_limiter_storage.reset()
+
+

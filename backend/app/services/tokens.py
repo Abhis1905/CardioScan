@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -35,6 +36,9 @@ def verify_email_token(raw_token: str, db: Session) -> Tuple[bool, Optional[User
 
     if not user:
         return False, None, "Invalid verification link"
+
+    if not getattr(user, "is_active", True):
+        return False, user, "Account is inactive. Please contact support."
 
     # Check expiration
     if user.verify_token_expires and datetime.utcnow() > user.verify_token_expires:
@@ -95,6 +99,9 @@ def verify_password_reset_token(raw_token: str, db: Session) -> Tuple[bool, Opti
     if not user:
         return False, None, "Invalid or expired reset link"
 
+    if not getattr(user, "is_active", True):
+        return False, user, "Account is inactive. Please contact support."
+
     if user.reset_token_expires and datetime.utcnow() > user.reset_token_expires:
         return False, user, "Reset link has expired. Please request a new one."
 
@@ -102,10 +109,15 @@ def verify_password_reset_token(raw_token: str, db: Session) -> Tuple[bool, Opti
 
 
 def consume_password_reset_token(user: User, new_password_hash: str, db: Session) -> None:
-    """Set new password, invalidate reset token immediately, and revoke all active sessions."""
-    user.password_hash = new_password_hash
-    user.reset_token_hash = None
-    user.reset_token_expires = None
-    user.token_version = (getattr(user, "token_version", 1) or 1) + 1
+    """Set new password, invalidate reset token immediately, and revoke all active sessions atomically."""
+    db.query(User).filter(User.id == user.id).update(
+        {
+            User.password_hash: new_password_hash,
+            User.reset_token_hash: None,
+            User.reset_token_expires: None,
+            User.token_version: func.coalesce(User.token_version, 1) + 1,
+        },
+        synchronize_session="fetch",
+    )
     db.commit()
     db.refresh(user)

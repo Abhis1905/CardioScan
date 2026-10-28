@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,7 @@ from app.core.rate_limiter import (
     rate_limit_forgot_password,
     rate_limit_google,
     rate_limit_login,
+    rate_limit_logout,
     rate_limit_register,
     rate_limit_reset_password,
     rate_limit_turnstile,
@@ -198,6 +200,11 @@ def verify_email(token: str = Query("", description="Verification token"), db: S
 
     success, user, error_msg = verify_email_token(token, db)
     if not success:
+        if error_msg and "inactive" in error_msg.lower():
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": error_msg},
+            )
         if error_msg and "expired" in error_msg.lower():
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -233,8 +240,8 @@ def resend_verification(payload: ResendVerificationRequest, db: Session = Depend
     email = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
 
-    # Prevent email enumeration: return benign message if user doesn't exist
-    if not user:
+    # Prevent email enumeration: return benign message if user doesn't exist or is inactive
+    if not user or not getattr(user, "is_active", True):
         return {"message": "If this email is registered, a verification link has been sent."}
 
     if user.is_verified:
@@ -269,8 +276,8 @@ def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db
     email = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
 
-    # Generic message avoids leaking whether email exists
-    if not user:
+    # Generic message avoids leaking whether email exists or account is inactive
+    if not user or not getattr(user, "is_active", True):
         return {"message": "If this email is registered, a reset link has been sent."}
 
     raw_token = create_password_reset_token(user, db)
@@ -292,6 +299,11 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 
     success, user, error_msg = verify_password_reset_token(token, db)
     if not success:
+        if error_msg and "inactive" in error_msg.lower():
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": error_msg},
+            )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={"error": error_msg or "Invalid or expired reset link"},
@@ -510,12 +522,16 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user.to_dict()
 
 
-@router.post("/logout")
+@router.post("/logout", dependencies=[Depends(rate_limit_logout)])
 def logout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Server-side logout invalidating all JWT access tokens issued under the current token_version.
+    Uses an atomic database increment to prevent race conditions during concurrent logout requests.
     """
-    current_user.token_version = (getattr(current_user, "token_version", 1) or 1) + 1
+    db.query(User).filter(User.id == current_user.id).update(
+        {User.token_version: func.coalesce(User.token_version, 1) + 1},
+        synchronize_session="fetch",
+    )
     db.commit()
     db.refresh(current_user)
     return {"message": "Logged out successfully"}

@@ -40,10 +40,10 @@ def get_current_user_optional(
     if not getattr(user, "is_active", True):
         return None
 
-    # Verify token version matches user's current token_version
+    # Verify token version matches user's current token_version (fail-closed on NULL or mismatch)
     token_version = payload.get("tv")
-    user_token_version = getattr(user, "token_version", 1)
-    if token_version is None or token_version != user_token_version:
+    user_token_version = getattr(user, "token_version", None)
+    if token_version is None or user_token_version is None or token_version != user_token_version:
         return None
 
     return user
