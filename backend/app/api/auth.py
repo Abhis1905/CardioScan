@@ -10,6 +10,7 @@ from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.rate_limiter import (
     get_client_ip,
+    rate_limit_change_password,
     rate_limit_forgot_password,
     rate_limit_google,
     rate_limit_login,
@@ -24,6 +25,7 @@ from app.db.session import get_db
 from app.models.cleanup import PendingFirebaseCleanup
 from app.models.user import User
 from app.schemas.auth import (
+    ChangePasswordRequest,
     FirebaseAuthRequest,
     ForgotPasswordRequest,
     GoogleAuthRequest,
@@ -312,6 +314,61 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     new_hash = hash_password(new_password)
     consume_password_reset_token(user, new_hash, db)
     return {"message": "Password reset successfully! You can now log in."}
+
+
+@router.post("/change-password", dependencies=[Depends(rate_limit_change_password)])
+def change_password(
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not getattr(current_user, "is_active", True):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Account is inactive. Please contact support."},
+        )
+
+    if not current_user.password_hash:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": "This account signs in using a federated provider (Google or Firebase) and does not have a native password. Password change is not supported.",
+                "code": "federated_account_no_password",
+            },
+        )
+
+    if not verify_password(payload.current_password, current_user.password_hash):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Incorrect current password."},
+        )
+
+    if payload.current_password == payload.new_password:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "New password cannot be identical to your current password."},
+        )
+
+    valid, err_msg = validate_password_strength(payload.new_password)
+    if not valid:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": err_msg},
+        )
+
+    new_hash = hash_password(payload.new_password)
+
+    db.query(User).filter(User.id == current_user.id).update(
+        {
+            User.password_hash: new_hash,
+            User.token_version: func.coalesce(User.token_version, 1) + 1,
+        },
+        synchronize_session="fetch",
+    )
+    db.commit()
+    db.refresh(current_user)
+
+    return {"message": "Password changed successfully. Please log in with your new password."}
 
 
 @router.post("/google", dependencies=[Depends(rate_limit_google)])

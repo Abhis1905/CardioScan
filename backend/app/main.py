@@ -1,10 +1,11 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import admin, analytics, auth, chat, history, predictions, profile, reports
 from app.core.config import settings
@@ -85,65 +86,122 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down CardioScan FastAPI backend.")
 
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Injects defensible HTTP security headers across all API responses:
+    - X-Content-Type-Options: nosniff
+    - X-Frame-Options: DENY
+    - Referrer-Policy: strict-origin-when-cross-origin
+    - Content-Security-Policy (API & frame restriction)
+    - Strict-Transport-Security (HSTS) in production over HTTPS
+    """
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
 
-# CORS Middleware
-origins = settings.cors_origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins if origins else ["*"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
+        # 1. MIME-type sniffing defense
+        response.headers["X-Content-Type-Options"] = "nosniff"
+
+        # 2. Clickjacking defense for API endpoints
+        response.headers["X-Frame-Options"] = "DENY"
+
+        # 3. Referrer policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+        # 4. Content-Security-Policy (API and frame restriction)
+        if settings.is_production:
+            response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        else:
+            # In development, permit Swagger UI/ReDoc CDN assets while restricting frames
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com; "
+                "frame-ancestors 'none'"
+            )
+
+        # 5. Strict-Transport-Security (HSTS)
+        # Enforced ONLY in production when accessed over HTTPS or behind trusted proxy with HTTPS
+        if settings.is_production:
+            forwarded_proto = request.headers.get("x-forwarded-proto", "").lower().strip()
+            is_https = request.url.scheme == "https" or forwarded_proto == "https"
+            if is_https:
+                response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+        return response
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Format Pydantic validation errors matching frontend expectations."""
-    errors = []
-    for error in exc.errors():
-        loc = " -> ".join(str(l) for l in error.get("loc", []))
-        msg = error.get("msg", "Invalid field")
-        errors.append(f"{loc}: {msg}")
-    error_summary = "; ".join(errors)
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"detail": error_summary, "error": error_summary},
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    # Public API documentation is disabled in production environments
+    docs_url = None if settings.is_production else "/docs"
+    redoc_url = None if settings.is_production else "/redoc"
+    openapi_url = None if settings.is_production else "/openapi.json"
+
+    application = FastAPI(
+        title=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        lifespan=lifespan,
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
     )
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Handle unhandled server exceptions, ensuring CORS headers are preserved."""
-    logger.error("Unhandled server exception on %s: %s", request.url.path, exc, exc_info=True)
-    origin = request.headers.get("origin")
-    headers = {}
-    if origin and (origin in settings.cors_origins or "*" in settings.cors_origins):
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Credentials"] = "true"
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"error": "An internal server error occurred. Please try again later."},
-        headers=headers,
+    # CORS Middleware
+    origins = settings.cors_origins
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins if origins else ["*"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
     )
+    # Security Headers Middleware wraps around CORS and application routes
+    application.add_middleware(SecurityHeadersMiddleware)
+
+    @application.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        """Format Pydantic validation errors matching frontend expectations."""
+        errors = []
+        for error in exc.errors():
+            loc = " -> ".join(str(l) for l in error.get("loc", []))
+            msg = error.get("msg", "Invalid field")
+            errors.append(f"{loc}: {msg}")
+        error_summary = "; ".join(errors)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": error_summary, "error": error_summary},
+        )
+
+    @application.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        """Handle unhandled server exceptions, ensuring CORS headers are preserved."""
+        logger.error("Unhandled server exception on %s: %s", request.url.path, exc, exc_info=True)
+        origin = request.headers.get("origin")
+        headers = {}
+        if origin and (origin in settings.cors_origins or "*" in settings.cors_origins):
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": "An internal server error occurred. Please try again later."},
+            headers=headers,
+        )
+
+    # Register all routers
+    application.include_router(analytics.router)
+    application.include_router(auth.router)
+    application.include_router(predictions.router)
+    application.include_router(history.router)
+    application.include_router(admin.router)
+    application.include_router(chat.router)
+    application.include_router(profile.router)
+    application.include_router(reports.router)
+
+    return application
 
 
-# Register all routers
-app.include_router(analytics.router)
-app.include_router(auth.router)
-app.include_router(predictions.router)
-app.include_router(history.router)
-app.include_router(admin.router)
-app.include_router(chat.router)
-app.include_router(profile.router)
-app.include_router(reports.router)
+app = create_app()
 
 
 if __name__ == "__main__":

@@ -116,6 +116,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_REPORTS_WINDOW: int = 60
     RATE_LIMIT_LOGOUT: int = 20
     RATE_LIMIT_LOGOUT_WINDOW: int = 60
+    RATE_LIMIT_CHANGE_PASSWORD: int = 5
+    RATE_LIMIT_CHANGE_PASSWORD_WINDOW: int = 60
 
     # ML Training Data Path
     HEART_CSV_PATH: str = os.path.join(
@@ -130,7 +132,7 @@ class Settings(BaseSettings):
 
         errors: List[str] = []
 
-        # 1. Database URL safety
+        # 1. Database URL & TLS safety
         db_url = (self.DATABASE_URL or "").strip()
         if not db_url:
             errors.append("DATABASE_URL is missing. Production requires a PostgreSQL connection string.")
@@ -138,14 +140,47 @@ class Settings(BaseSettings):
             errors.append(
                 "DATABASE_URL is using SQLite. Production requires a PostgreSQL connection string (postgresql://...)."
             )
-        elif not (
-            db_url.startswith("postgresql://")
-            or db_url.startswith("postgres://")
-            or db_url.startswith("postgresql+psycopg2://")
-        ):
-            errors.append(
-                "DATABASE_URL format is unsupported for production. Expected a PostgreSQL connection string."
-            )
+        else:
+            try:
+                from sqlalchemy.engine import make_url
+
+                # Normalize postgres:// to postgresql:// so make_url parses standard SQLAlchemy dialects
+                parse_target = db_url
+                if parse_target.startswith("postgres://"):
+                    parse_target = parse_target.replace("postgres://", "postgresql://", 1)
+
+                parsed = make_url(parse_target)
+                driver = parsed.drivername.lower()
+                if not (driver == "postgresql" or driver.startswith("postgresql+")):
+                    errors.append(
+                        f"DATABASE_URL dialect '{driver}' is unsupported for production. Expected a PostgreSQL connection string."
+                    )
+                else:
+                    # Enforce explicit secure TLS configuration
+                    ssl_mode = parsed.query.get("sslmode")
+                    if isinstance(ssl_mode, tuple):
+                        ssl_mode = ssl_mode[0]
+                    ssl_mode_clean = (ssl_mode or "").lower().strip()
+                    allowed_ssl_modes = {"require", "verify-ca", "verify-full"}
+                    insecure_ssl_modes = {"disable", "allow", "prefer"}
+
+                    if not ssl_mode_clean:
+                        errors.append(
+                            "Production DATABASE_URL must explicitly enforce TLS by setting 'sslmode=require' (or 'verify-ca' / 'verify-full')."
+                        )
+                    elif ssl_mode_clean in insecure_ssl_modes:
+                        errors.append(
+                            f"Insecure PostgreSQL sslmode='{ssl_mode_clean}' is rejected in production. Use 'sslmode=require' (or 'verify-ca' / 'verify-full')."
+                        )
+                    elif ssl_mode_clean not in allowed_ssl_modes:
+                        errors.append(
+                            f"Unrecognized PostgreSQL sslmode='{ssl_mode_clean}' in production DATABASE_URL. Supported secure modes: {', '.join(sorted(allowed_ssl_modes))}."
+                        )
+            except Exception:
+                # Do not leak raw credentials in validation error
+                errors.append(
+                    "DATABASE_URL is malformed and could not be parsed as a valid database connection string."
+                )
 
         # 2. JWT Secret safety
         jwt_sec = (self.JWT_SECRET or "").strip()

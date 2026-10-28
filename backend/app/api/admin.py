@@ -1,7 +1,7 @@
 import csv
 import io
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy import func, text
@@ -277,16 +277,36 @@ def admin_delete_prediction(
     return {"message": "Prediction deleted"}
 
 
+def _sanitize_csv_cell(value: Any) -> Any:
+    """
+    Sanitize CSV cell against formula injection (CSV/DDE injection in Excel/Sheets/Calc).
+    Neutralizes cells starting with '=', '+', '-', '@', '\t', '\r' by prefixing with a single quote.
+    """
+    if value is None:
+        return ""
+    str_val = str(value)
+    if str_val and str_val[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return f"'{str_val}"
+    return str_val
+
+
 @router.get("/export/users")
 def admin_export_users(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
-    """Export users as CSV."""
+    """Export users as CSV with formula injection defense."""
     users = db.query(User).order_by(User.created_at.desc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["ID", "Name", "Email", "Verified", "Created At", "Predictions"])
     for u in users:
         p_count = db.query(Prediction).filter(Prediction.user_id == u.id).count()
-        writer.writerow([u.id, u.name, u.email, u.is_verified, u.created_at, p_count])
+        writer.writerow([
+            _sanitize_csv_cell(u.id),
+            _sanitize_csv_cell(u.name),
+            _sanitize_csv_cell(u.email),
+            _sanitize_csv_cell(u.is_verified),
+            _sanitize_csv_cell(u.created_at.isoformat() if u.created_at else ""),
+            _sanitize_csv_cell(p_count),
+        ])
 
     return Response(
         content=output.getvalue(),
@@ -297,24 +317,37 @@ def admin_export_users(admin: User = Depends(get_current_admin), db: Session = D
 
 @router.get("/export/predictions")
 def admin_export_predictions(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
-    """Export predictions as CSV."""
+    """
+    Export predictions for administrative platform governance and audit.
+    Enforces Data Minimization: omits patient legal names, personal email addresses,
+    and raw clinical measurements. Uses pseudonymous identifiers (Report ID and Patient ID).
+    Neutralizes formula injection for all exported cells.
+    """
     preds = db.query(Prediction).order_by(Prediction.created_at.desc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "ID", "User", "Email", "Age", "Sex", "CP", "TrestBPS", "Chol", "FBS", "RestECG",
-        "Thalach", "Exang", "Oldpeak", "Slope", "CA", "Thal",
-        "Prediction", "Probability", "Risk", "Model", "Created At"
+        "Prediction ID",
+        "Report ID",
+        "Patient ID",
+        "Model Used",
+        "Prediction",
+        "Probability",
+        "Risk Level",
+        "Created At",
     ])
     for p in preds:
-        user = p.user
+        canonical_report_id = p.report_id or (f"CS-REP-{p.id:06d}" if p.id else "Unassigned")
+        pseudonymous_pid = p.patient_id or (p.user.patient_id if p.user else "Unassigned")
         writer.writerow([
-            p.id,
-            user.name if user else "Deleted",
-            user.email if user else "Deleted",
-            p.age, p.sex, p.cp, p.trestbps, p.chol, p.fbs, p.restecg,
-            p.thalach, p.exang, p.oldpeak, p.slope, p.ca, p.thal,
-            p.prediction, p.probability, p.risk_level, p.model_used, p.created_at
+            _sanitize_csv_cell(p.id),
+            _sanitize_csv_cell(canonical_report_id),
+            _sanitize_csv_cell(pseudonymous_pid),
+            _sanitize_csv_cell(p.model_used),
+            _sanitize_csv_cell(p.prediction),
+            _sanitize_csv_cell(round(p.probability, 4) if p.probability is not None else ""),
+            _sanitize_csv_cell(p.risk_level),
+            _sanitize_csv_cell(p.created_at.isoformat() if p.created_at else ""),
         ])
 
     return Response(

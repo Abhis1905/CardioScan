@@ -447,3 +447,185 @@ def test_logout_rate_limiting(client, test_user):
     rate_limiter_storage.reset()
 
 
+def test_change_password_success_and_immediate_token_revocation(client, test_user, db_session):
+    """
+    WP5: Authenticated password change updates password hash, atomically increments
+    token_version, immediately invalidates existing JWT sessions, and allows login with new password.
+    """
+    # 1. Login with initial password
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert login_resp.status_code == 200
+    old_token = login_resp.json()["token"]
+    old_headers = {"Authorization": f"Bearer {old_token}"}
+
+    # Verify old token works
+    assert client.get("/auth/me", headers=old_headers).status_code == 200
+    db_session.refresh(test_user)
+    initial_version = getattr(test_user, "token_version", 1) or 1
+
+    # 2. Change password
+    change_resp = client.post(
+        "/auth/change-password",
+        json={
+            "current_password": "password123",
+            "new_password": "BrandNewSecurePassword2026!",
+        },
+        headers=old_headers,
+    )
+    assert change_resp.status_code == 200
+    assert "Password changed successfully" in change_resp.json()["message"]
+
+    # Verify token_version incremented in database
+    db_session.refresh(test_user)
+    assert test_user.token_version == initial_version + 1
+
+    # 3. Old token is immediately invalidated (fail-closed token_version mismatch)
+    stale_me = client.get("/auth/me", headers=old_headers)
+    assert stale_me.status_code == 401
+
+    # 4. Old password is no longer accepted
+    old_login = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    assert old_login.status_code == 401
+
+    # 5. New password works and issues valid session
+    new_login = client.post("/auth/login", json={"email": test_user.email, "password": "BrandNewSecurePassword2026!"})
+    assert new_login.status_code == 200
+    new_token = new_login.json()["token"]
+    new_headers = {"Authorization": f"Bearer {new_token}"}
+
+    me_resp = client.get("/auth/me", headers=new_headers)
+    assert me_resp.status_code == 200
+    assert me_resp.json()["email"] == test_user.email
+
+
+def test_change_password_incorrect_current_password(client, test_user):
+    """WP5: Change password fails with 400 if current_password does not match."""
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    headers = {"Authorization": f"Bearer {login_resp.json()['token']}"}
+
+    resp = client.post(
+        "/auth/change-password",
+        json={
+            "current_password": "WrongPassword999!",
+            "new_password": "BrandNewSecurePassword2026!",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "Incorrect current password" in resp.json()["error"]
+
+
+def test_change_password_identical_password_rejected(client, test_user):
+    """WP5: New password cannot be identical to current password."""
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    headers = {"Authorization": f"Bearer {login_resp.json()['token']}"}
+
+    resp = client.post(
+        "/auth/change-password",
+        json={
+            "current_password": "password123",
+            "new_password": "password123",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "identical to your current password" in resp.json()["error"]
+
+
+def test_change_password_weak_new_password_rejected(client, test_user):
+    """WP5: New password is validated against the centralized password policy."""
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    headers = {"Authorization": f"Bearer {login_resp.json()['token']}"}
+
+    # Short password (< 12 chars)
+    resp_short = client.post(
+        "/auth/change-password",
+        json={"current_password": "password123", "new_password": "short"},
+        headers=headers,
+    )
+    assert resp_short.status_code == 400
+    assert "at least 12 characters" in resp_short.json()["error"]
+
+
+def test_change_password_federated_account_rejected(client, db_session):
+    """WP5: Accounts without a native password hash cannot use /auth/change-password."""
+    from app.core.security import create_access_token
+
+    fed_user = User(
+        name="Google Federated",
+        email="google_fed@example.com",
+        password_hash=None,
+        google_id="google-sub-777",
+        is_verified=True,
+        token_version=1,
+    )
+    db_session.add(fed_user)
+    db_session.commit()
+    db_session.refresh(fed_user)
+
+    token = create_access_token(subject=fed_user.id, token_version=1)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = client.post(
+        "/auth/change-password",
+        json={"current_password": "any", "new_password": "BrandNewSecurePassword2026!"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "federated_account_no_password"
+    assert "federated" in resp.json()["error"].lower()
+
+
+def test_change_password_inactive_account_rejected(client, test_user, db_session):
+    """WP5: Inactive accounts cannot change password."""
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    token = login_resp.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    test_user.is_active = False
+    db_session.commit()
+
+    resp = client.post(
+        "/auth/change-password",
+        json={"current_password": "password123", "new_password": "BrandNewSecurePassword2026!"},
+        headers=headers,
+    )
+    assert resp.status_code == 401
+
+
+def test_change_password_unauthenticated_rejected(client):
+    """WP5: Unauthenticated requests to /auth/change-password return 401."""
+    resp = client.post(
+        "/auth/change-password",
+        json={"current_password": "password123", "new_password": "BrandNewSecurePassword2026!"},
+    )
+    assert resp.status_code == 401
+
+
+def test_change_password_rate_limiting(client, test_user):
+    """WP5: POST /auth/change-password is rate-limited to 5 requests per 60 seconds."""
+    from app.core.rate_limiter import rate_limiter_storage
+    rate_limiter_storage.reset()
+
+    login_resp = client.post("/auth/login", json={"email": test_user.email, "password": "password123"})
+    headers = {"Authorization": f"Bearer {login_resp.json()['token']}"}
+
+    # First 5 calls consume quota
+    for _ in range(5):
+        r = client.post(
+            "/auth/change-password",
+            json={"current_password": "wrongPassword123!", "new_password": "BrandNewSecurePassword2026!"},
+            headers=headers,
+        )
+        assert r.status_code == 400
+
+    # 6th call hits rate limit 429
+    limited_resp = client.post(
+        "/auth/change-password",
+        json={"current_password": "wrongPassword123!", "new_password": "BrandNewSecurePassword2026!"},
+        headers=headers,
+    )
+    assert limited_resp.status_code == 429
+    assert "Too many requests" in limited_resp.json()["detail"]["error"]
+
+    rate_limiter_storage.reset()

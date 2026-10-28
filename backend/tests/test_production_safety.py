@@ -116,13 +116,99 @@ def test_production_safety_passes_with_valid_production_config():
     """Verify that production succeeds when all security requirements are satisfied."""
     s = Settings(
         ENVIRONMENT="production",
-        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway",
+        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode=require",
         JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
         EMAIL_PROVIDER="resend",
         RESEND_API_KEY="re_1234567890abcdef",
     )
     s.validate_production_safety()
     assert s.is_production is True
+
+
+@pytest.mark.parametrize("sslmode", ["require", "verify-ca", "verify-full"])
+def test_production_safety_accepts_secure_sslmodes(sslmode):
+    """Verify that secure PostgreSQL SSL modes are accepted in production."""
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL=f"postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode={sslmode}",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    s.validate_production_safety()
+
+
+def test_production_safety_accepts_neon_pooled_url_with_channel_binding():
+    """Verify Neon pooled connections with channel_binding and sslmode=require validate cleanly."""
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgres://app_user:secret_pass@ep-sample-pooler.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    s.validate_production_safety()
+
+
+@pytest.mark.parametrize("sslmode", ["disable", "allow", "prefer"])
+def test_production_safety_rejects_insecure_sslmodes(sslmode):
+    """Verify that insecure PostgreSQL SSL modes are rejected in production."""
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL=f"postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode={sslmode}",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production_safety()
+    assert "Insecure PostgreSQL sslmode" in str(exc_info.value)
+    assert sslmode in str(exc_info.value)
+
+
+def test_production_safety_rejects_missing_sslmode():
+    """Verify that production fails if DATABASE_URL does not explicitly specify sslmode."""
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production_safety()
+    assert "must explicitly enforce TLS" in str(exc_info.value)
+
+
+def test_production_safety_rejects_unsupported_database_dialect():
+    """Verify that non-PostgreSQL dialects are rejected in production."""
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="mysql+pymysql://app_user:secret_db_pass@db.railway.internal:3306/db?sslmode=require",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production_safety()
+    assert "unsupported for production" in str(exc_info.value)
+
+
+def test_production_safety_sanitizes_credentials_on_parse_error():
+    """Verify that malformed DATABASE_URL does not leak database passwords in exception message."""
+    secret_pass = "super_classified_db_pass_98765"
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL=f"postgresql://app_user:{secret_pass}@db.railway.internal:not_a_valid_port/railway?sslmode=require",
+        JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
+        EMAIL_PROVIDER="resend",
+        RESEND_API_KEY="re_1234567890abcdef",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production_safety()
+    err_text = str(exc_info.value)
+    assert secret_pass not in err_text
+    assert "malformed" in err_text
 
 
 def test_production_safety_never_exposes_secrets_in_errors():
@@ -147,3 +233,79 @@ def test_email_service_disabled_provider(monkeypatch):
     sent, err = email_service.send_verification_email("user@example.com", "User", "token_123")
     assert sent is False
     assert "disabled" in err.lower()
+
+
+def test_production_docs_disabled_in_production(monkeypatch):
+    """Verify that Swagger UI, ReDoc, and OpenAPI schema return 404 in production."""
+    from starlette.testclient import TestClient
+    from app.main import create_app
+
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "DATABASE_URL", "postgresql://u:p@db:5432/d?sslmode=require")
+    monkeypatch.setattr(settings, "JWT_SECRET", "super_long_production_test_secret_32_chars_ok!")
+    monkeypatch.setattr(settings, "EMAIL_PROVIDER", "resend")
+    monkeypatch.setattr(settings, "RESEND_API_KEY", "re_test_key_12345")
+
+    prod_app = create_app()
+    assert prod_app.docs_url is None
+    assert prod_app.redoc_url is None
+    assert prod_app.openapi_url is None
+
+    client = TestClient(prod_app)
+    assert client.get("/docs").status_code == 404
+    assert client.get("/redoc").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
+def test_docs_enabled_in_development(monkeypatch):
+    """Verify that Swagger UI, ReDoc, and OpenAPI schema are accessible in development."""
+    from starlette.testclient import TestClient
+    from app.main import create_app
+
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development")
+    dev_app = create_app()
+    assert dev_app.docs_url == "/docs"
+    assert dev_app.redoc_url == "/redoc"
+    assert dev_app.openapi_url == "/openapi.json"
+
+    client = TestClient(dev_app)
+    assert client.get("/openapi.json").status_code == 200
+
+
+def test_http_security_headers_applied(client):
+    """Verify essential security headers are attached by middleware to HTTP responses."""
+    res = client.get("/metrics")
+    assert res.headers["X-Content-Type-Options"] == "nosniff"
+    assert res.headers["X-Frame-Options"] == "DENY"
+    assert res.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    assert "default-src" in res.headers["Content-Security-Policy"]
+    assert "frame-ancestors 'none'" in res.headers["Content-Security-Policy"]
+
+
+def test_hsts_header_in_production(monkeypatch, client):
+    """Verify HSTS header is attached in production over HTTPS and omitted on plain HTTP."""
+    # Development: no HSTS
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development")
+    res_dev = client.get("/metrics")
+    assert "Strict-Transport-Security" not in res_dev.headers
+
+    # Production over HTTPS (via X-Forwarded-Proto)
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    res_prod_https = client.get("/metrics", headers={"X-Forwarded-Proto": "https"})
+    assert res_prod_https.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
+
+    # Production over plain HTTP: omitted
+    res_prod_http = client.get("/metrics", headers={"X-Forwarded-Proto": "http"})
+    assert "Strict-Transport-Security" not in res_prod_http.headers
+
+
+def test_security_headers_on_cors_preflight(client):
+    """Verify security headers are attached to CORS preflight OPTIONS responses."""
+    headers = {
+        "Origin": "http://localhost:3000",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Authorization,Content-Type",
+    }
+    res = client.options("/auth/login", headers=headers)
+    assert res.headers["X-Content-Type-Options"] == "nosniff"
+    assert res.headers["X-Frame-Options"] == "DENY"

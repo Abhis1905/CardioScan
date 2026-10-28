@@ -43,6 +43,7 @@ export const updateNotes = (id, notes) => API.put(`/history/${id}/notes`, { note
 export const deleteAccount = () => API.delete("/auth/delete-account");
 export const forgotPassword = (email) => API.post("/auth/forgot-password", { email });
 export const resetPassword = (token, password) => API.post("/auth/reset-password", { token, password });
+export const changePassword = (data) => API.post("/auth/change-password", data);
 export const adminStats = () => API.get("/admin/stats");
 export const adminUsers = (search) => API.get(`/admin/users${search ? `?search=${search}` : ""}`);
 export const adminDeleteUser = (id) => API.delete(`/admin/users/${id}`);

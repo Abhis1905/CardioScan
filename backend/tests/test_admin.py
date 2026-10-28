@@ -99,7 +99,12 @@ def test_admin_predictions_and_export(client, admin_headers, test_user, db_sessi
     res_exp_p = client.get("/admin/export/predictions", headers=admin_headers)
     assert res_exp_p.status_code == 200
     assert "text/csv" in res_exp_p.headers["content-type"]
-    assert "ID,User,Email,Age" in res_exp_p.text
+    assert "Prediction ID,Report ID,Patient ID,Model Used,Prediction,Probability,Risk Level,Created At" in res_exp_p.text
+    # Sensitive user PII and raw clinical biomarkers must be omitted
+    assert test_user.name not in res_exp_p.text
+    assert test_user.email not in res_exp_p.text
+    assert "trestbps" not in res_exp_p.text
+    assert "chol" not in res_exp_p.text
 
     # Delete prediction
     res_del_p = client.delete(f"/admin/predictions/{pred.id}", headers=admin_headers)
@@ -243,6 +248,90 @@ def test_legacy_admin_required_fails_closed_when_unconfigured():
     with patch.dict(os.environ, {}, clear=True):
         admin_email = (os.environ.get("ADMIN_EMAIL") or "").strip().lower()
         assert admin_email == ""
+
+
+def test_admin_export_unauthenticated_and_non_admin_forbidden(client, auth_headers):
+    """Verify CSV export routes require admin authorization."""
+    # Unauthenticated
+    assert client.get("/admin/export/predictions").status_code == 401
+    assert client.get("/admin/export/users").status_code == 401
+
+    # Standard authenticated user (non-admin)
+    assert client.get("/admin/export/predictions", headers=auth_headers).status_code == 403
+    assert client.get("/admin/export/users", headers=auth_headers).status_code == 403
+
+
+def test_admin_export_formula_injection_defense(client, admin_headers, db_session):
+    """
+    Verify spreadsheet formula injection characters (=, +, -, @, \\t, \\r)
+    are neutralized with a leading single quote (') in exported CSVs.
+    """
+    from app.core.security import hash_password
+
+    # Create user with formula injection payload in name and email
+    formula_user = User(
+        name="=cmd|' /C calc'!A0",
+        email="@evil_user@domain.com",
+        password_hash=hash_password("password123"),
+        is_verified=True,
+        patient_id="-PID-9999",
+    )
+    db_session.add(formula_user)
+    db_session.commit()
+    db_session.refresh(formula_user)
+
+    formula_pred = Prediction(
+        user_id=formula_user.id,
+        report_id="+CS-REP-FORMULA",
+        age=50,
+        sex=1,
+        cp=1,
+        trestbps=120,
+        chol=200,
+        fbs=0,
+        restecg=0,
+        thalach=150,
+        exang=0,
+        oldpeak=1.0,
+        slope=1,
+        ca=0,
+        thal=2,
+        prediction=1,
+        probability=0.8,
+        risk_level="High",
+        model_used="random_forest",
+    )
+    db_session.add(formula_pred)
+    db_session.commit()
+
+    # Check predictions export sanitization
+    res_p = client.get("/admin/export/predictions", headers=admin_headers)
+    assert res_p.status_code == 200
+    p_text = res_p.text
+    # +CS-REP-FORMULA must be prefixed with '
+    assert "'+CS-REP-FORMULA" in p_text
+    # -PID-9999 must be prefixed with '
+    assert "'-PID-9999" in p_text
+
+    # Check users export sanitization
+    res_u = client.get("/admin/export/users", headers=admin_headers)
+    assert res_u.status_code == 200
+    u_text = res_u.text
+    assert "'=cmd|' /C calc'!A0" in u_text
+    assert "'@evil_user@domain.com" in u_text
+
+
+def test_admin_export_empty_predictions(client, admin_headers, db_session):
+    """Exporting predictions when none exist returns the CSV header cleanly without error."""
+    # Delete all predictions
+    db_session.query(Prediction).delete()
+    db_session.commit()
+
+    res = client.get("/admin/export/predictions", headers=admin_headers)
+    assert res.status_code == 200
+    lines = [line.strip() for line in res.text.strip().split("\n") if line.strip()]
+    assert len(lines) == 1
+    assert lines[0] == "Prediction ID,Report ID,Patient ID,Model Used,Prediction,Probability,Risk Level,Created At"
 
 
 

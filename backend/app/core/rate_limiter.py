@@ -343,3 +343,10 @@ rate_limit_logout = RateLimiter(
     window_seconds=lambda: getattr(settings, "RATE_LIMIT_LOGOUT_WINDOW", 60),
     prefer_user_identity=True,
 )
+
+rate_limit_change_password = RateLimiter(
+    "change_password",
+    limit=lambda: getattr(settings, "RATE_LIMIT_CHANGE_PASSWORD", 5),
+    window_seconds=lambda: getattr(settings, "RATE_LIMIT_CHANGE_PASSWORD_WINDOW", 60),
+    prefer_user_identity=True,
+)
