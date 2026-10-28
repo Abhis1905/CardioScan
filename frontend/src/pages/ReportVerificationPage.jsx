@@ -162,37 +162,6 @@ export default function ReportVerificationPage() {
                   </span>
                 </div>
 
-                {/* Patient ID (Account level) */}
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
-                    Patient ID
-                  </span>
-                  <span className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">
-                    {data.patient_id}
-                  </span>
-                </div>
-
-                {/* Patient Name (Masked for privacy) */}
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
-                    Patient Legal Name (Masked)
-                  </span>
-                  <span className="font-medium text-sm text-[#1A241E] dark:text-[#F2F3F3]">
-                    {data.patient_masked_name}
-                  </span>
-                </div>
-
-                {/* Assessment Date */}
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
-                    Assessment Timestamp
-                  </span>
-                  <span className="font-medium text-xs text-[#1A241E] dark:text-[#F2F3F3] flex items-center gap-1.5">
-                    <Calendar size={13} className="text-[#6B7F74] dark:text-[#8C9399]" />
-                    {formattedDate}
-                  </span>
-                </div>
-
                 {/* Inference Model */}
                 <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
@@ -203,33 +172,97 @@ export default function ReportVerificationPage() {
                   </span>
                 </div>
 
-                {/* Risk Stratification */}
+                {/* Registry Issuer */}
                 <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
-                    Stratified Risk Outcome
+                    Issuing Authority
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-xs ${
-                        data.risk_level === "High"
-                          ? "bg-[#FDF3F2] dark:bg-[#2a1716] text-[#A84438] dark:text-[#f87171] border border-[#EACAC6] dark:border-[#522522]"
-                          : data.risk_level === "Moderate"
-                          ? "bg-[#FBF5EE] dark:bg-[#261e16] text-[#B56E2B] dark:text-[#fbbf24] border border-[#EBD3BC] dark:border-[#523d24]"
-                          : "bg-[#F0F7F2] dark:bg-[#202823] text-[#2D7A58] dark:text-[#789580] border border-[#C4DFCD] dark:border-[#373C40]"
-                      }`}
-                    >
-                      {data.risk_level} Risk ({data.probability_percent}%)
+                  <span className="font-medium text-xs text-[#1A241E] dark:text-[#F2F3F3]">
+                    {data.issuer || "CardioScan Automated Clinical Registry"}
+                  </span>
+                </div>
+
+                {/* Verification Status */}
+                <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
+                    Registry Status
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-semibold text-xs text-[#2D7A58] dark:text-[#789580]">
+                    <CheckCircle2 size={13} /> Authentic Registry Record
+                  </span>
+                </div>
+
+                {/* Patient ID (Account level - Authorized Only) */}
+                {data.patient_id && (
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
+                      Patient ID
                     </span>
-                    <span className="text-[11px] text-[#52665A] dark:text-[#B2B7BB]">
-                      {data.indication}
+                    <span className="font-mono text-sm font-bold text-[#35483E] dark:text-[#F2F3F3]">
+                      {data.patient_id}
                     </span>
                   </div>
-                </div>
+                )}
+
+                {/* Patient Name (Masked for privacy - Authorized Only) */}
+                {data.patient_masked_name && (
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
+                      Patient Legal Name (Masked)
+                    </span>
+                    <span className="font-medium text-sm text-[#1A241E] dark:text-[#F2F3F3]">
+                      {data.patient_masked_name}
+                    </span>
+                  </div>
+                )}
+
+                {/* Assessment Date (Authorized Only) */}
+                {data.assessment_date && (
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
+                      Assessment Timestamp
+                    </span>
+                    <span className="font-medium text-xs text-[#1A241E] dark:text-[#F2F3F3] flex items-center gap-1.5">
+                      <Calendar size={13} className="text-[#6B7F74] dark:text-[#8C9399]" />
+                      {formattedDate}
+                    </span>
+                  </div>
+                )}
+
+                {/* Risk Stratification (Authorized Only) */}
+                {data.risk_level && (
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#282C30] border border-[#E5E0D6] dark:border-[#373C40]">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7F74] dark:text-[#8C9399] block mb-1">
+                      Stratified Risk Outcome
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-xs ${
+                          data.risk_level === "High"
+                            ? "bg-[#FDF3F2] dark:bg-[#2a1716] text-[#A84438] dark:text-[#f87171] border border-[#EACAC6] dark:border-[#522522]"
+                            : data.risk_level === "Moderate"
+                            ? "bg-[#FBF5EE] dark:bg-[#261e16] text-[#B56E2B] dark:text-[#fbbf24] border border-[#EBD3BC] dark:border-[#523d24]"
+                            : "bg-[#F0F7F2] dark:bg-[#202823] text-[#2D7A58] dark:text-[#789580] border border-[#C4DFCD] dark:border-[#373C40]"
+                        }`}
+                      >
+                        {data.risk_level} Risk ({data.probability_percent}%)
+                      </span>
+                      <span className="text-[11px] text-[#52665A] dark:text-[#B2B7BB]">
+                        {data.indication}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Privacy Notice on Clinical Metrics */}
               <div className="mt-4 p-3 rounded-xl bg-[#E4EDE5]/40 dark:bg-[#282C30]/50 border border-[#D3DFD5] dark:border-[#373C40] text-[11px] text-[#52665A] dark:text-[#B2B7BB] leading-relaxed">
-                <strong>Patient Privacy Safeguard:</strong> In strict compliance with healthcare data minimization standards, raw physiological measurements (resting blood pressure, serum cholesterol, electrocardiographic tracings) and clinical notes are <strong>never exposed</strong> via public verification URLs. Full clinical parameters are restricted to the authenticated patient account.
+                <strong>Patient Privacy Safeguard:</strong> In strict compliance with healthcare data minimization standards, patient identity, clinical biomarkers, and diagnostic risk predictions are <strong>restricted to the authenticated patient account</strong>.
+                {!data.is_authenticated_owner && (
+                  <span className="block mt-1.5 font-medium text-[#2D7A58] dark:text-[#789580]">
+                    Sign in to your CardioScan account to view your full clinical assessment findings.
+                  </span>
+                )}
               </div>
             </div>
 

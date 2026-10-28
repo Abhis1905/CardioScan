@@ -13,6 +13,7 @@ from app.models.user import User
 from app.schemas.prediction import PredictRequest, WhatIfRequest
 from app.services.ml import ml_service, FEATURE_NAMES, FIELD_RULES
 from app.services.patient_identity import get_field_cooldown_status
+from app.services.report_identity import generate_report_id
 
 router = APIRouter(tags=["predictions"])
 
@@ -45,6 +46,7 @@ def predict(
         votes = None
 
     saved_id = None
+    report_id_res = None
     patient_name_res = payload.patient_name or "Anonymous Patient"
     patient_id_res = None
 
@@ -63,10 +65,13 @@ def predict(
             patient_name_res = current_user.name
             patient_id_res = current_user.patient_id
 
+            new_report_id = generate_report_id(db)
+
             pred_record = Prediction(
                 user_id=current_user.id,
                 patient_name=current_user.name,
                 patient_id=current_user.patient_id,
+                report_id=new_report_id,
                 prediction=pred,
                 probability=prob,
                 risk_level=risk,
@@ -78,15 +83,15 @@ def predict(
                 },
             )
             db.add(pred_record)
-            db.flush()
-            pred_record.report_id = f"CS-REP-{pred_record.id:06d}"
             db.commit()
             db.refresh(pred_record)
             saved_id = pred_record.id
+            report_id_res = pred_record.report_id
         except Exception as e:
             db.rollback()
 
-    report_id_res = f"CS-REP-{saved_id:06d}" if saved_id else None
+    if not current_user:
+        report_id_res = None
 
     resp = {
         "prediction": pred,

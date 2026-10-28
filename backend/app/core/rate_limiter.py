@@ -330,3 +330,9 @@ rate_limit_turnstile = RateLimiter(
     limit=lambda: settings.RATE_LIMIT_TURNSTILE,
     window_seconds=lambda: settings.RATE_LIMIT_TURNSTILE_WINDOW,
 )
+
+rate_limit_reports = RateLimiter(
+    "reports",
+    limit=lambda: getattr(settings, "RATE_LIMIT_REPORTS", 30),
+    window_seconds=lambda: getattr(settings, "RATE_LIMIT_REPORTS_WINDOW", 60),
+)

@@ -247,7 +247,7 @@ function RiskTrendChart({ predictions }) {
                   return (
                     <div className="bg-white dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] rounded-xl p-3 shadow-md text-xs space-y-1">
                       <p className="font-serif font-bold text-[#35483E] dark:text-[#F2F3F3]">
-                        Report CS-REP-{String(item.id).padStart(6, "0")}
+                        Report {item.report_id || item.uhid || (item.id ? `CS-REP-${String(item.id).padStart(6, "0")}` : "CS-REP-—")}
                       </p>
                       <p className="text-[#52665A] dark:text-[#B2B7BB]">{item.fullDate}</p>
                       <div className="flex items-center gap-2 pt-1 border-t border-[#E5E0D6] dark:border-[#373C40]">
@@ -320,7 +320,7 @@ function TimelineCard({ pred, onDelete, user }) {
     minute: "2-digit",
   });
 
-  const reportId = `CS-REP-${String(pred.id).padStart(6, "0")}`;
+  const reportId = pred.report_id || pred.uhid || (pred.id ? `CS-REP-${String(pred.id).padStart(6, "0")}` : "CS-REP-—");
   const recordedName = pred.patient_name || user?.name || "Patient Record";
   const recordedId = pred.patient_id || user?.patient_id || "Unassigned";
 
