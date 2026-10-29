@@ -116,7 +116,7 @@ def test_production_safety_passes_with_valid_production_config():
     """Verify that production succeeds when all security requirements are satisfied."""
     s = Settings(
         ENVIRONMENT="production",
-        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode=require",
+        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode=verify-full",
         JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
         EMAIL_PROVIDER="resend",
         RESEND_API_KEY="re_1234567890abcdef",
@@ -125,34 +125,37 @@ def test_production_safety_passes_with_valid_production_config():
     assert s.is_production is True
 
 
-@pytest.mark.parametrize("sslmode", ["require", "verify-ca", "verify-full"])
-def test_production_safety_accepts_secure_sslmodes(sslmode):
-    """Verify that secure PostgreSQL SSL modes are accepted in production."""
+def test_production_safety_requires_verify_full_in_production():
+    """Verify that sslmode=verify-full is accepted in production."""
     s = Settings(
         ENVIRONMENT="production",
-        DATABASE_URL=f"postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode={sslmode}",
+        DATABASE_URL="postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode=verify-full",
         JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
         EMAIL_PROVIDER="resend",
         RESEND_API_KEY="re_1234567890abcdef",
     )
     s.validate_production_safety()
+    assert s.is_production is True
 
 
 def test_production_safety_accepts_neon_pooled_url_with_channel_binding():
-    """Verify Neon pooled connections with channel_binding and sslmode=require validate cleanly."""
+    """Verify Neon pooled connections with channel_binding and sslmode=verify-full validate cleanly."""
     s = Settings(
         ENVIRONMENT="production",
-        DATABASE_URL="postgres://app_user:secret_pass@ep-sample-pooler.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        DATABASE_URL="postgres://app_user:secret_pass@ep-sample-pooler.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require",
         JWT_SECRET="valid_cryptographic_production_secret_with_32_chars_minimum!",
         EMAIL_PROVIDER="resend",
         RESEND_API_KEY="re_1234567890abcdef",
     )
     s.validate_production_safety()
+    assert s.sync_database_url.startswith("postgresql+psycopg2://")
+    assert "channel_binding=require" in s.sync_database_url
+    assert "sslmode=verify-full" in s.sync_database_url
 
 
-@pytest.mark.parametrize("sslmode", ["disable", "allow", "prefer"])
-def test_production_safety_rejects_insecure_sslmodes(sslmode):
-    """Verify that insecure PostgreSQL SSL modes are rejected in production."""
+@pytest.mark.parametrize("sslmode", ["disable", "allow", "prefer", "require", "verify-ca"])
+def test_production_safety_rejects_insecure_and_insufficient_sslmodes(sslmode):
+    """Verify that insecure and insufficient PostgreSQL SSL modes are rejected in production."""
     s = Settings(
         ENVIRONMENT="production",
         DATABASE_URL=f"postgresql://app_user:secret_db_pass@db.railway.internal:5432/railway?sslmode={sslmode}",
@@ -162,7 +165,7 @@ def test_production_safety_rejects_insecure_sslmodes(sslmode):
     )
     with pytest.raises(RuntimeError) as exc_info:
         s.validate_production_safety()
-    assert "Insecure PostgreSQL sslmode" in str(exc_info.value)
+    assert "insufficient or insecure in production" in str(exc_info.value)
     assert sslmode in str(exc_info.value)
 
 
@@ -177,7 +180,18 @@ def test_production_safety_rejects_missing_sslmode():
     )
     with pytest.raises(RuntimeError) as exc_info:
         s.validate_production_safety()
-    assert "must explicitly enforce TLS" in str(exc_info.value)
+    assert "sslmode=verify-full" in str(exc_info.value)
+
+
+def test_database_url_normalization_postgres_and_postgresql():
+    """Verify that both postgres:// and postgresql:// normalize to postgresql+psycopg2://."""
+    s1 = Settings(DATABASE_URL="postgres://user:pass@localhost:5432/db?sslmode=verify-full")
+    assert s1.sync_database_url.startswith("postgresql+psycopg2://")
+    assert "sslmode=verify-full" in s1.sync_database_url
+
+    s2 = Settings(DATABASE_URL="postgresql://user:pass@localhost:5432/db?sslmode=verify-full")
+    assert s2.sync_database_url.startswith("postgresql+psycopg2://")
+    assert "sslmode=verify-full" in s2.sync_database_url
 
 
 def test_production_safety_rejects_unsupported_database_dialect():
@@ -241,7 +255,7 @@ def test_production_docs_disabled_in_production(monkeypatch):
     from app.main import create_app
 
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
-    monkeypatch.setattr(settings, "DATABASE_URL", "postgresql://u:p@db:5432/d?sslmode=require")
+    monkeypatch.setattr(settings, "DATABASE_URL", "postgresql://u:p@db:5432/d?sslmode=verify-full")
     monkeypatch.setattr(settings, "JWT_SECRET", "super_long_production_test_secret_32_chars_ok!")
     monkeypatch.setattr(settings, "EMAIL_PROVIDER", "resend")
     monkeypatch.setattr(settings, "RESEND_API_KEY", "re_test_key_12345")
@@ -309,3 +323,19 @@ def test_security_headers_on_cors_preflight(client):
     res = client.options("/auth/login", headers=headers)
     assert res.headers["X-Content-Type-Options"] == "nosniff"
     assert res.headers["X-Frame-Options"] == "DENY"
+
+
+def test_alembic_env_validates_production_safety(monkeypatch):
+    """Verify that Alembic migration environment fails fast when production safety checks fail."""
+    from alembic.config import Config
+    from alembic import command
+
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "DATABASE_URL", "sqlite:///./unsafe_prod.db")
+
+    alembic_cfg = Config("backend/alembic.ini")
+    alembic_cfg.set_main_option("script_location", "backend/alembic")
+
+    with pytest.raises(RuntimeError) as exc_info:
+        command.upgrade(alembic_cfg, "head", sql=True)
+    assert "DATABASE_URL is using SQLite" in str(exc_info.value)

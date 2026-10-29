@@ -263,10 +263,11 @@ export default function AdminPage() {
       if (predSearch.trim()) {
         const q = predSearch.toLowerCase();
         const refMatch = `EV-${String(p.id).padStart(5, "0")}`.toLowerCase().includes(q);
-        const nameMatch = p.user_name && p.user_name.toLowerCase().includes(q);
-        const emailMatch = p.user_email && p.user_email.toLowerCase().includes(q);
+        const pidMatch = p.patient_id && p.patient_id.toLowerCase().includes(q);
+        const reportMatch = p.report_id && p.report_id.toLowerCase().includes(q);
         const modelMatch = p.model_used && p.model_used.toLowerCase().includes(q);
-        if (!refMatch && !nameMatch && !emailMatch && !modelMatch) return false;
+        const userMatch = p.user_id && String(p.user_id).includes(q);
+        if (!refMatch && !pidMatch && !reportMatch && !modelMatch && !userMatch) return false;
       }
       return true;
     });
@@ -1227,7 +1228,7 @@ export default function AdminPage() {
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7F74]" />
                     <input
                       type="text"
-                      placeholder="Search by assessment ref, user, or model..."
+                      placeholder="Search by assessment ref, patient ID, report ID, or model..."
                       className="glossy-input pl-9 pr-4 py-2 rounded-xl text-xs sm:text-sm w-full outline-hidden"
                       value={predSearch}
                       onChange={(e) => setPredSearch(e.target.value)}
@@ -1319,8 +1320,12 @@ export default function AdminPage() {
                                 </td>
                                 <td className="py-3 px-4">
                                   <div>
-                                    <p className="font-medium text-[#35483E] dark:text-[#F2F3F3]">{p.user_name || "Anonymous Account"}</p>
-                                    <p className="font-mono text-[11px] text-[#8A9990] dark:text-[#8C9399]">{p.user_email || "N/A"}</p>
+                                    <p className="font-mono font-medium text-[#35483E] dark:text-[#F2F3F3]">
+                                      {p.patient_id || (p.user_id ? `User #${p.user_id}` : "Anonymous")}
+                                    </p>
+                                    <p className="font-mono text-[11px] text-[#8A9990] dark:text-[#8C9399]">
+                                      {p.report_id || "Unassigned"}
+                                    </p>
                                   </div>
                                 </td>
                                 <td className="py-3 px-4">

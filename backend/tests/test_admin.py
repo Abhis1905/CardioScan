@@ -83,22 +83,38 @@ def test_admin_predictions_and_export(client, admin_headers, test_user, db_sessi
     db_session.add(pred)
     db_session.commit()
 
-    # List predictions
+    # List predictions (minimized operational view)
     res_preds = client.get("/admin/predictions?risk=High", headers=admin_headers)
     assert res_preds.status_code == 200
     assert len(res_preds.json()) >= 1
-    assert res_preds.json()[0]["user_name"] == test_user.name
+    first_pred = res_preds.json()[0]
+    assert first_pred["user_id"] == test_user.id
+    assert "report_id" in first_pred
+    assert "patient_id" in first_pred
+    assert "prediction" in first_pred
+    assert "risk_level" in first_pred
+    # Sensitive PII and raw clinical biomarkers must be strictly omitted
+    assert "user_name" not in first_pred
+    assert "user_email" not in first_pred
+    assert "trestbps" not in first_pred
+    assert "chol" not in first_pred
+    assert "shap_values" not in first_pred
+    assert "notes" not in first_pred
 
-    # Export users CSV
+    # Export users CSV (with UTF-8 BOM and charset=utf-8)
     res_exp_u = client.get("/admin/export/users", headers=admin_headers)
     assert res_exp_u.status_code == 200
     assert "text/csv" in res_exp_u.headers["content-type"]
+    assert "charset=utf-8" in res_exp_u.headers["content-type"].lower()
+    assert res_exp_u.text.startswith("\ufeff")
     assert "ID,Name,Email,Verified" in res_exp_u.text
 
-    # Export predictions CSV
+    # Export predictions CSV (with UTF-8 BOM and charset=utf-8)
     res_exp_p = client.get("/admin/export/predictions", headers=admin_headers)
     assert res_exp_p.status_code == 200
     assert "text/csv" in res_exp_p.headers["content-type"]
+    assert "charset=utf-8" in res_exp_p.headers["content-type"].lower()
+    assert res_exp_p.text.startswith("\ufeff")
     assert "Prediction ID,Report ID,Patient ID,Model Used,Prediction,Probability,Risk Level,Created At" in res_exp_p.text
     # Sensitive user PII and raw clinical biomarkers must be omitted
     assert test_user.name not in res_exp_p.text
@@ -329,9 +345,32 @@ def test_admin_export_empty_predictions(client, admin_headers, db_session):
 
     res = client.get("/admin/export/predictions", headers=admin_headers)
     assert res.status_code == 200
+    assert res.text.startswith("\ufeff")
     lines = [line.strip() for line in res.text.strip().split("\n") if line.strip()]
     assert len(lines) == 1
-    assert lines[0] == "Prediction ID,Report ID,Patient ID,Model Used,Prediction,Probability,Risk Level,Created At"
+    assert lines[0].lstrip("\ufeff") == "Prediction ID,Report ID,Patient ID,Model Used,Prediction,Probability,Risk Level,Created At"
+
+
+def test_admin_sanitize_csv_cell_edge_cases():
+    """Verify formula injection prefixes, leading whitespace, and negative number preservation."""
+    from app.api.admin import _sanitize_csv_cell
+
+    # Leading whitespace formula triggers must be sanitized
+    assert _sanitize_csv_cell("  =1+1") == "'  =1+1"
+    assert _sanitize_csv_cell("   @SUM(A1:A10)") == "'   @SUM(A1:A10)"
+    assert _sanitize_csv_cell("\t=calc") == "'\t=calc"
+    assert _sanitize_csv_cell("\r+cmd") == "'\r+cmd"
+    assert _sanitize_csv_cell("  -cmd") == "'  -cmd"
+    assert _sanitize_csv_cell("%0a") == "'%0a"
+
+    # Legitimate signed numeric values must be preserved
+    assert _sanitize_csv_cell(-42) == -42
+    assert _sanitize_csv_cell(-3.14159) == -3.14159
+    assert _sanitize_csv_cell("-12.5") == "-12.5"
+    assert _sanitize_csv_cell("  -12.5  ") == "  -12.5  "
+    assert _sanitize_csv_cell(0) == 0
+    assert _sanitize_csv_cell(100) == 100
+    assert _sanitize_csv_cell(None) == ""
 
 
 

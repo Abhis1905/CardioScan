@@ -25,6 +25,9 @@ config.set_main_option("sqlalchemy.url", settings.sync_database_url)
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
+    if settings.is_production:
+        settings.validate_production_safety()
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -39,6 +42,9 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    if settings.is_production:
+        settings.validate_production_safety()
+
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = settings.sync_database_url
 

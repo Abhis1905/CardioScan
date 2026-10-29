@@ -23,11 +23,9 @@ class Settings(BaseSettings):
     def sync_database_url(self) -> str:
         url = self.DATABASE_URL
         if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
-        elif url.startswith("postgresql://"):
-            # Ensure using psycopg2
-            if not url.startswith("postgresql+psycopg2://"):
-                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg2://"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
         return url
 
     # Security & Auth
@@ -156,25 +154,32 @@ class Settings(BaseSettings):
                         f"DATABASE_URL dialect '{driver}' is unsupported for production. Expected a PostgreSQL connection string."
                     )
                 else:
-                    # Enforce explicit secure TLS configuration
+                    # Enforce strict secure TLS configuration (verify-full required in production)
                     ssl_mode = parsed.query.get("sslmode")
                     if isinstance(ssl_mode, tuple):
-                        ssl_mode = ssl_mode[0]
-                    ssl_mode_clean = (ssl_mode or "").lower().strip()
-                    allowed_ssl_modes = {"require", "verify-ca", "verify-full"}
-                    insecure_ssl_modes = {"disable", "allow", "prefer"}
+                        all_modes = [m.lower().strip() for m in ssl_mode if m]
+                        if not all(m == "verify-full" for m in all_modes):
+                            errors.append(
+                                "Production DATABASE_URL contains conflicting or insufficient sslmode parameters. Full certificate and hostname verification ('sslmode=verify-full') is required."
+                            )
+                        ssl_mode_clean = all_modes[-1] if all_modes else ""
+                    else:
+                        ssl_mode_clean = (ssl_mode or "").lower().strip()
+
+                    allowed_ssl_modes = {"verify-full"}
+                    insufficient_or_insecure_modes = {"disable", "allow", "prefer", "require", "verify-ca"}
 
                     if not ssl_mode_clean:
                         errors.append(
-                            "Production DATABASE_URL must explicitly enforce TLS by setting 'sslmode=require' (or 'verify-ca' / 'verify-full')."
+                            "Production DATABASE_URL must explicitly enforce full TLS certificate and hostname verification by setting 'sslmode=verify-full'."
                         )
-                    elif ssl_mode_clean in insecure_ssl_modes:
+                    elif ssl_mode_clean in insufficient_or_insecure_modes:
                         errors.append(
-                            f"Insecure PostgreSQL sslmode='{ssl_mode_clean}' is rejected in production. Use 'sslmode=require' (or 'verify-ca' / 'verify-full')."
+                            f"PostgreSQL sslmode='{ssl_mode_clean}' is insufficient or insecure in production. Full certificate and hostname verification ('sslmode=verify-full') is required."
                         )
                     elif ssl_mode_clean not in allowed_ssl_modes:
                         errors.append(
-                            f"Unrecognized PostgreSQL sslmode='{ssl_mode_clean}' in production DATABASE_URL. Supported secure modes: {', '.join(sorted(allowed_ssl_modes))}."
+                            f"Unrecognized PostgreSQL sslmode='{ssl_mode_clean}' in production DATABASE_URL. Production requires 'sslmode=verify-full'."
                         )
             except Exception:
                 # Do not leak raw credentials in validation error

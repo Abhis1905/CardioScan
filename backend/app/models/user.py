@@ -146,6 +146,7 @@ class User(Base):
             "is_admin": self.is_admin,
             "is_verified": self.is_verified,
             "is_active": getattr(self, "is_active", True),
+            "has_password": bool(self.password_hash),
             "consent_given": self.consent_given,
             "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,
             "age": self.calculate_age(),

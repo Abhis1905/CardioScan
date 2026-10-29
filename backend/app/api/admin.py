@@ -227,13 +227,17 @@ def admin_delete_user(
 
 @router.get("/predictions")
 def admin_predictions(
-    search: str = Query("", description="Search user name or email"),
+    search: str = Query("", description="Search report ID, patient ID, model, or evaluation ref"),
     risk: str = Query("", description="Filter by risk level"),
     model: str = Query("", description="Filter by model used"),
     admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """List predictions across all users."""
+    """
+    List predictions across all users for administrative platform governance and audit.
+    Enforces Data Minimization: omits patient legal names, personal email addresses,
+    all 13 raw clinical biomarkers, SHAP values, and clinical notes.
+    """
     query = db.query(Prediction).order_by(Prediction.created_at.desc())
     if risk:
         query = query.filter(Prediction.risk_level == risk)
@@ -243,19 +247,31 @@ def admin_predictions(
     preds = query.all()
     result = []
     for p in preds:
-        user = p.user
-        user_name = user.name if user else "Deleted"
-        user_email = user.email if user else "Deleted"
+        canonical_report_id = p.report_id or (f"CS-REP-{p.id:06d}" if p.id else "Unassigned")
+        pseudonymous_pid = p.patient_id or (p.user.patient_id if p.user else "Unassigned")
+        ref_code = f"EV-{p.id:05d}"
 
         if search:
             s = search.lower()
-            if s not in user_name.lower() and s not in user_email.lower():
+            if (
+                s not in canonical_report_id.lower()
+                and s not in pseudonymous_pid.lower()
+                and s not in p.model_used.lower()
+                and s not in ref_code.lower()
+            ):
                 continue
 
-        d = p.to_dict()
-        d["user_name"] = user_name
-        d["user_email"] = user_email
-        result.append(d)
+        result.append({
+            "id": p.id,
+            "report_id": canonical_report_id,
+            "patient_id": pseudonymous_pid,
+            "user_id": p.user_id,
+            "model_used": p.model_used,
+            "prediction": p.prediction,
+            "probability": round(p.probability, 4) if p.probability is not None else 0.0,
+            "risk_level": p.risk_level,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        })
     return result
 
 
@@ -280,19 +296,44 @@ def admin_delete_prediction(
 def _sanitize_csv_cell(value: Any) -> Any:
     """
     Sanitize CSV cell against formula injection (CSV/DDE injection in Excel/Sheets/Calc).
-    Neutralizes cells starting with '=', '+', '-', '@', '\t', '\r' by prefixing with a single quote.
+    Neutralizes cells starting with dangerous prefixes '=', '+', '-', '@', '\t', '\r', '%'
+    even when preceded by whitespace or control characters.
+    Preserves legitimate negative numeric integers and floats.
     """
     if value is None:
         return ""
+
+    if isinstance(value, bool):
+        return str(value)
+
+    if isinstance(value, (int, float)):
+        return value
+
     str_val = str(value)
-    if str_val and str_val[0] in ("=", "+", "-", "@", "\t", "\r"):
+    stripped = str_val.lstrip()
+
+    # Preserve legitimate negative numbers (e.g. "-1", "-12.5", "-0.05")
+    if stripped.startswith("-"):
+        try:
+            float(stripped)
+            return str_val
+        except ValueError:
+            pass
+
+    # Neutralize cells starting with dangerous formula prefixes after leading whitespace
+    if stripped and stripped[0] in ("=", "+", "-", "@", "\t", "\r", "%"):
         return f"'{str_val}"
+
+    # Check if raw value begins with whitespace control characters
+    if str_val and str_val[0] in ("\t", "\r", "\n"):
+        return f"'{str_val}"
+
     return str_val
 
 
 @router.get("/export/users")
 def admin_export_users(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
-    """Export users as CSV with formula injection defense."""
+    """Export users as CSV with formula injection defense and UTF-8 BOM."""
     users = db.query(User).order_by(User.created_at.desc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
@@ -308,10 +349,11 @@ def admin_export_users(admin: User = Depends(get_current_admin), db: Session = D
             _sanitize_csv_cell(p_count),
         ])
 
+    content = "\ufeff" + output.getvalue()
     return Response(
-        content=output.getvalue(),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment;filename=cardioscan_users.csv"},
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=cardioscan_users.csv"},
     )
 
 
@@ -321,7 +363,7 @@ def admin_export_predictions(admin: User = Depends(get_current_admin), db: Sessi
     Export predictions for administrative platform governance and audit.
     Enforces Data Minimization: omits patient legal names, personal email addresses,
     and raw clinical measurements. Uses pseudonymous identifiers (Report ID and Patient ID).
-    Neutralizes formula injection for all exported cells.
+    Neutralizes formula injection for all exported cells and includes UTF-8 BOM.
     """
     preds = db.query(Prediction).order_by(Prediction.created_at.desc()).all()
     output = io.StringIO()
@@ -350,10 +392,11 @@ def admin_export_predictions(admin: User = Depends(get_current_admin), db: Sessi
             _sanitize_csv_cell(p.created_at.isoformat() if p.created_at else ""),
         ])
 
+    content = "\ufeff" + output.getvalue()
     return Response(
-        content=output.getvalue(),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment;filename=cardioscan_predictions.csv"},
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=cardioscan_predictions.csv"},
     )
 
 

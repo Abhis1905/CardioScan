@@ -27,6 +27,9 @@ import {
   AlertTriangle,
   RotateCcw,
   Download,
+  Key,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -37,8 +40,9 @@ import {
   getProfile,
   updateProfile,
   correctProfile,
+  changePassword,
 } from "../api";
-import { auth } from "../firebase";
+import { auth, signOut } from "../firebase";
 import { generateReportFromPrediction } from "../utils/reportGenerator";
 
 const FEATURE_NAMES = {
@@ -59,7 +63,7 @@ const FEATURE_NAMES = {
 
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const { user, logoutUser, refreshUser } = useAuth();
+  const { user, logoutUser, refreshUser, setUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -95,6 +99,19 @@ export default function ProfilePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // Password Change State
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   // Load Profile and History
   const fetchProfileData = async () => {
@@ -239,6 +256,94 @@ export default function ProfilePage() {
       toast.error(err?.response?.data?.error || t("common.error", "Could not delete account"));
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    const { current_password, new_password, confirm_password } = passwordForm;
+
+    if (!current_password) {
+      const err = t("dashboard.current_password_required", "Current password is required.");
+      setPasswordError(err);
+      toast.error(err);
+      return;
+    }
+
+    if (!new_password) {
+      const err = t("dashboard.new_password_required", "New password is required.");
+      setPasswordError(err);
+      toast.error(err);
+      return;
+    }
+
+    if (new_password.length < 12) {
+      const err = t("dashboard.password_min_length", "New password must be at least 12 characters long.");
+      setPasswordError(err);
+      toast.error(err);
+      return;
+    }
+
+    if (new_password === current_password) {
+      const err = t("dashboard.password_must_differ", "New password cannot be identical to your current password.");
+      setPasswordError(err);
+      toast.error(err);
+      return;
+    }
+
+    if (new_password !== confirm_password) {
+      const err = t("dashboard.passwords_do_not_match", "New password confirmation does not match.");
+      setPasswordError(err);
+      toast.error(err);
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const res = await changePassword({
+        current_password,
+        new_password,
+      });
+
+      setPasswordForm({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
+
+      const msg =
+        res?.data?.message ||
+        t(
+          "dashboard.password_changed_signout",
+          "Password changed successfully. All active sessions have been invalidated. Please log in with your new password."
+        );
+      setPasswordSuccess(msg);
+      toast.success(msg);
+
+      // Invalidate frontend token and session state
+      localStorage.removeItem("token");
+      try {
+        if (auth) {
+          signOut(auth).catch(() => {});
+        }
+      } catch (_) {}
+      setUser(null);
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (err) {
+      const errMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.detail ||
+        t("common.error", "Failed to change password. Please check your inputs.");
+      setPasswordError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -1219,7 +1324,181 @@ export default function ProfilePage() {
         )}
       </section>
 
-      {/* ── 6. Account Management & Privacy (Danger Zone) ── */}
+      {/* ── 6. Account Security & Credentials ── */}
+      <section className="glossy-card p-5 sm:p-7 border border-[#E5E0D6] dark:border-[#373C40] shadow-sm space-y-5">
+        <div className="flex items-center gap-2.5 text-[#35483E] dark:text-[#F2F3F3] pb-3 border-b border-[#E5E0D6] dark:border-[#373C40]">
+          <Key size={18} className="text-[#35483E] dark:text-[#789580]" />
+          <h2 className="font-serif font-semibold text-base text-[#35483E] dark:text-[#F2F3F3] tracking-tight">
+            {t("dashboard.account_security_title", "Account Security & Credentials")}
+          </h2>
+        </div>
+
+        {user?.has_password === false ? (
+          <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#202326] border border-[#E5E0D6] dark:border-[#373C40] flex items-start gap-3">
+            <Info size={16} className="text-[#52665A] dark:text-[#8C9399] shrink-0 mt-0.5" />
+            <div className="space-y-1 text-xs text-[#52665A] dark:text-[#C5CCD2]">
+              <span className="font-semibold text-[#35483E] dark:text-[#F2F3F3] block">
+                {t("dashboard.federated_sso_title", "Federated Single Sign-On Account")}
+              </span>
+              <p className="leading-relaxed">
+                {t(
+                  "dashboard.federated_sso_desc",
+                  "This account authenticates using an external identity provider (Google / Federated SSO) and does not maintain a native CardioScan password. Password updates and security credentials should be managed directly through your provider."
+                )}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handlePasswordChange} className="space-y-4 max-w-lg">
+            <p className="text-xs text-[#6B7F74] dark:text-[#8C9399]">
+              {t(
+                "dashboard.password_policy_desc",
+                "Ensure your account uses a secure passphrase of at least 12 characters. Changing your password terminates all active sessions across all devices."
+              )}
+            </p>
+
+            {passwordError && (
+              <div
+                role="alert"
+                className="p-3 rounded-xl bg-[#FAF0EE] dark:bg-[#261B1A] border border-[#F0D5D1] dark:border-[#4A2D2A] text-[#B35D52] dark:text-[#E08A80] text-xs flex items-center gap-2"
+              >
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div
+                role="status"
+                className="p-3 rounded-xl bg-[#E4EDE5] dark:bg-[#282C30] border border-[#D3DFD5] dark:border-[#373C40] text-[#2D7A58] dark:text-[#789580] text-xs flex items-center gap-2"
+              >
+                <CheckCircle2 size={14} className="shrink-0" />
+                <span>{passwordSuccess}</span>
+              </div>
+            )}
+
+            {/* Current Password */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="current-password"
+                className="text-xs font-semibold text-[#35483E] dark:text-[#F2F3F3] block"
+              >
+                {t("dashboard.current_password", "Current Password")}
+              </label>
+              <div className="relative">
+                <input
+                  id="current-password"
+                  name="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={passwordForm.current_password}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, current_password: e.target.value })
+                  }
+                  className="glossy-input w-full ps-3.5 pe-10 py-2.5 text-xs sm:text-sm font-mono dark:bg-[#17191B] dark:text-[#F2F3F3] dark:border-[#373C40]"
+                />
+                <button
+                  type="button"
+                  aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8A9990] hover:text-[#35483E] dark:hover:text-[#F2F3F3] cursor-pointer"
+                >
+                  {showCurrentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="new-password"
+                  className="text-xs font-semibold text-[#35483E] dark:text-[#F2F3F3] block"
+                >
+                  {t("dashboard.new_password", "New Password")}
+                </label>
+                <span className="text-[10px] font-mono text-[#6B7F74] dark:text-[#8C9399]">
+                  {t("dashboard.min_length_badge", "Min. 12 characters")}
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  id="new-password"
+                  name="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  required
+                  autoComplete="new-password"
+                  value={passwordForm.new_password}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, new_password: e.target.value })
+                  }
+                  className="glossy-input w-full ps-3.5 pe-10 py-2.5 text-xs sm:text-sm font-mono dark:bg-[#17191B] dark:text-[#F2F3F3] dark:border-[#373C40]"
+                />
+                <button
+                  type="button"
+                  aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8A9990] hover:text-[#35483E] dark:hover:text-[#F2F3F3] cursor-pointer"
+                >
+                  {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="confirm-password"
+                className="text-xs font-semibold text-[#35483E] dark:text-[#F2F3F3] block"
+              >
+                {t("dashboard.confirm_new_password", "Confirm New Password")}
+              </label>
+              <div className="relative">
+                <input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  autoComplete="new-password"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirm_password: e.target.value })
+                  }
+                  className="glossy-input w-full ps-3.5 pe-10 py-2.5 text-xs sm:text-sm font-mono dark:bg-[#17191B] dark:text-[#F2F3F3] dark:border-[#373C40]"
+                />
+                <button
+                  type="button"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8A9990] hover:text-[#35483E] dark:hover:text-[#F2F3F3] cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={changingPassword}
+                className="glossy-btn-primary py-2.5 px-6 rounded-xl text-white text-xs font-semibold shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              >
+                {changingPassword && (
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                <span>
+                  {changingPassword
+                    ? t("dashboard.updating_password", "Updating Password...")
+                    : t("dashboard.update_password_btn", "Change Password & Sign Out")}
+                </span>
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
+
+      {/* ── 7. Account Management & Privacy (Danger Zone) ── */}
       <section className="glossy-card p-5 sm:p-7 border border-[#E5E0D6] shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 text-[#B35D52] pb-3 border-b border-[#E5E0D6]">
           <AlertCircle size={18} />

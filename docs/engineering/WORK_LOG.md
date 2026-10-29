@@ -107,3 +107,61 @@
 - **Frontend Jest Suite:** 9 passed (0 failed).
 - **Frontend Production Build:** Compiled successfully via `npm run build`.
 - **Git Formatting:** `git diff --check` passed cleanly with 0 whitespace errors.
+
+## Priority 1.1 Production Security Remediation
+**Date:** October 29, 2026
+**Active Branch:** `security/priority-1-remediation`
+**Base Commit:** `fe4f34e` (`security/priority-1-production-hardening`)
+**Scope:** Implemented and tested all eight Priority 1.1 remediation items addressing findings from the independent adversarial audit across database TLS policy, password change frontend interface, administrative data minimization, CSV formula injection defense, Alembic migration safety, URL normalization, CSV character encoding, and rate limiter documentation.
+
+### Summary of Implementation
+
+1. **Item A: Mandatory Database TLS Full Verification (`backend/app/core/config.py`)**
+   - Mandated `sslmode=verify-full` in production environments (`ENVIRONMENT=production`).
+   - Actively rejects insecure modes (`disable`, `allow`, `prefer`) as well as insufficient modes (`require`, `verify-ca`) that skip certificate hostname validation.
+   - Evaluates all query parameters when multiple `sslmode` declarations occur to prevent bypasses.
+
+2. **Item B: Password Change Frontend Interface (`frontend/src/pages/ProfilePage.jsx`)**
+   - Built accessible, responsive credential management card in `ProfilePage.jsx` titled "Account Security & Credentials".
+   - Form fields: Current Password, New Password, Confirm New Password with show/hide password toggles.
+   - Client validation: Minimum 12 characters, confirmation matching, non-empty validation, and difference from current password.
+   - Clean backend error mapping and toast notification without sensitive data exposure.
+   - Federated account handling: Detects accounts without native passwords (`user?.has_password === false`) and renders informative message explaining credentials must be managed via their SSO provider.
+   - Session termination: On successful update, clears tokens from `localStorage`, signs out Firebase identity, resets auth state, and redirects to `/login`.
+
+3. **Item C: Administrative Prediction Endpoint Data Minimization (`backend/app/api/admin.py`, `frontend/src/pages/AdminPage.jsx`)**
+   - Minimized `GET /admin/predictions` payload to return only pseudonymous operational fields (`id`, `report_id`, `patient_id`, `user_id`, `model_used`, `prediction`, `probability`, `risk_level`, `created_at`).
+   - Strictly omitted patient legal names, personal email addresses, raw clinical biomarkers, physician notes, and SHAP attribution vectors.
+   - Updated `AdminPage.jsx` table view and search filter to operate on `patient_id` and `report_id` instead of patient names or emails.
+
+4. **Item D: CSV Formula Injection Defense Hardening (`backend/app/api/admin.py`)**
+   - Hardened `_sanitize_csv_cell()` to strip leading whitespace before checking for formula trigger characters (`=`, `+`, `-`, `@`, `\t`, `\r`, `%`).
+   - Sanitizes control character prefixes such as tabs or carriage returns.
+   - Preserves legitimate negative numeric values (integers, floating point numbers, and formatted decimals) without breaking calculations or prepending escape characters.
+
+5. **Item E: Alembic Production Safety Validation (`backend/alembic/env.py`)**
+   - Integrated `settings.validate_production_safety()` in both `run_migrations_offline()` and `run_migrations_online()` when `settings.is_production is True`.
+   - Ensures migrations cannot execute or generate static SQL against unverified, insecure, or SQLite databases in production mode.
+
+6. **Item F: Robust PostgreSQL URL Normalization (`backend/app/core/config.py`)**
+   - Standardized `sync_database_url` to normalize both legacy `postgres://` and `postgresql://` schemes into `postgresql+psycopg2://`.
+   - Correctly preserves URL-encoded credentials (usernames/passwords with special characters) and query parameters (such as Neon pooler settings and `channel_binding`).
+
+7. **Item G: CSV Character Encoding & UTF-8 BOM Compatibility (`backend/app/api/admin.py`)**
+   - Prepended UTF-8 Byte Order Mark (`\ufeff`) to exported CSV streams in `/admin/export/users` and `/admin/export/predictions`.
+   - Set explicit content type header: `media_type="text/csv; charset=utf-8"`, ensuring seamless rendering in Microsoft Excel, Apple Numbers, and LibreOffice.
+
+8. **Item H: Rate Limiting Architecture & Limitations Documentation (`docs/engineering/SECURITY.md`)**
+   - Authored comprehensive architectural document detailing the sliding-window rate limiting system.
+   - Documented process-local in-memory scope, horizontal scaling implications, process restart volatility, and migration path to a distributed Redis backend.
+
+### Test Verification
+
+- **Backend Pytest Suite:** 196 passed (0 failed, 0 skipped; 3 new regression tests added).
+  - Database TLS `verify-full` mandate, URL normalization, and Alembic safety: 4 tests.
+  - Minimized prediction endpoint and safe CSV exports: 2 tests.
+  - Formula injection edge cases and negative number preservation: 1 test.
+- **Frontend Jest Suite:** 9 passed (0 failed).
+- **Frontend Production Build:** Compiled successfully via `npm run build`.
+- **Alembic Static Migration Verification:** Verified clean offline `--sql` migration traversal across all revisions up to `i5d6e7f8a9b0`.
+- **Git Formatting:** `git diff --check` passed cleanly with 0 whitespace errors.
