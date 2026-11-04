@@ -33,7 +33,8 @@ backend/cardioscan.db
 # Caches & Test Artifacts
 .pytest_cache/
 *.joblib
-backend/app/artifacts/
+backend/app/artifacts/*
+!backend/app/artifacts/models_bundle.joblib
 
 # Credentials & Service Accounts - NEVER commit keys
 *firebase*.json
