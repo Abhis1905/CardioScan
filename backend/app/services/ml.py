@@ -1,4 +1,8 @@
+import hashlib
+import hmac
+import io
 import os
+import re
 import joblib
 import logging
 from typing import Any, Dict, List, Optional, Tuple
@@ -244,6 +248,143 @@ FEATURE_CATALOG = {
 }
 
 
+class ModelIntegrityError(RuntimeError):
+    """Raised when a machine learning model artifact fails cryptographic integrity checks."""
+    pass
+
+
+def validate_sha256_digest(digest: str) -> bool:
+    """Validate that a string is a valid 64-character lowercase or uppercase hex SHA-256 digest."""
+    if not isinstance(digest, str):
+        return False
+    return bool(re.match(r"^[0-9a-fA-F]{64}$", digest.strip()))
+
+
+def compute_bytes_sha256(data: bytes) -> str:
+    """Compute the hexadecimal lowercase SHA-256 digest of arbitrary bytes."""
+    return hashlib.sha256(data).hexdigest().lower()
+
+
+def safe_basename(path: Optional[str], fallback: str = "model_bundle") -> str:
+    """
+    Safely extract the file or directory basename in a cross-platform manner,
+    treating both POSIX forward slashes (/) and Windows backslashes (\\)
+    as path separators regardless of the host operating system.
+    """
+    if not path or not isinstance(path, str):
+        return fallback
+
+    clean_path = path.strip().replace("\\", "/").rstrip("/")
+    if not clean_path or (len(clean_path) == 2 and clean_path[0].isalpha() and clean_path[1] == ":"):
+        return fallback
+
+    name = clean_path.rsplit("/", 1)[-1].strip()
+    return name if name else fallback
+
+
+def verify_and_load_artifact(
+    file_path: str,
+    expected_sha256: Optional[str] = None,
+    require_digest: bool = True,
+) -> Any:
+    """
+    Securely verify a model artifact's SHA-256 digest BEFORE any deserialization occurs.
+
+    Security & Integrity Guarantees (SEC-03):
+    1. Pre-Deserialization Verification: The file is read into memory and cryptographically verified
+       before any call to joblib.load or pickle.load.
+    2. Trusted Digest Validation: The expected digest must be a valid 64-character hexadecimal SHA-256
+       hash string sourced from a trusted configuration (e.g. settings.MODEL_BUNDLE_SHA256).
+    3. TOCTOU Elimination: The exact in-memory bytes that were verified are deserialized using io.BytesIO,
+       preventing Time-of-Check to Time-of-Use file substitution attacks on disk.
+    4. Constant-Time Comparison: Uses hmac.compare_digest to prevent side-channel timing leaks.
+    5. Fail-Closed: If the file does not exist, the digest is missing/malformed, or the hash mismatches,
+       ModelIntegrityError is raised without calling deserializers.
+    """
+    artifact_name = safe_basename(file_path, fallback="model_bundle")
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Model artifact not found: {artifact_name}")
+
+    if not os.path.isfile(file_path):
+        raise ModelIntegrityError(f"Model artifact target is not a regular file: {artifact_name}")
+
+    # 1. Validate expected digest configuration
+    if not expected_sha256 or not expected_sha256.strip():
+        if require_digest:
+            raise ModelIntegrityError(
+                "Model artifact integrity verification failed: no trusted expected SHA-256 digest provided."
+            )
+        else:
+            raise ModelIntegrityError(
+                "Model artifact verification cannot proceed: digest is required for safe deserialization."
+            )
+
+    clean_expected = expected_sha256.strip().lower()
+    if not validate_sha256_digest(clean_expected):
+        raise ModelIntegrityError(
+            f"Configured model artifact digest is malformed ({len(clean_expected)} chars, invalid hex). "
+            "Expected a valid 64-character hexadecimal SHA-256 string."
+        )
+
+    # 2. Read full artifact bytes into memory once
+    raw_bytes = None
+    read_err_type = None
+    try:
+        with open(file_path, "rb") as f:
+            raw_bytes = f.read()
+    except Exception as read_err:
+        read_err_type = type(read_err).__name__
+
+    if read_err_type is not None:
+        raise ModelIntegrityError(
+            f"Failed to read model artifact ({artifact_name}): {read_err_type}"
+        ) from None
+
+    if len(raw_bytes) == 0:
+        raise ModelIntegrityError(f"Model artifact is completely empty (0 bytes): {artifact_name}")
+
+    # 3. Compute SHA-256 on the exact bytes in memory
+    actual_sha256 = compute_bytes_sha256(raw_bytes)
+
+    # 4. Constant-time digest comparison
+    if not hmac.compare_digest(actual_sha256, clean_expected):
+        logger.critical(
+            "SECURITY ALERT: Model artifact integrity verification failed for %s! "
+            "Expected SHA-256 [%s...], computed actual SHA-256 [%s...]. Deserialization blocked.",
+            artifact_name,
+            clean_expected[:8],
+            actual_sha256[:8],
+        )
+        raise ModelIntegrityError(
+            f"Model artifact integrity check failed for {artifact_name}: SHA-256 mismatch."
+        )
+
+    logger.info(
+        "Cryptographic integrity verified for model artifact: %s (SHA-256: %s...)",
+        artifact_name,
+        actual_sha256[:8],
+    )
+
+    # 5. Deserialization strictly from verified in-memory bytes (eliminating TOCTOU)
+    bundle = None
+    deser_err_type = None
+    try:
+        bundle = joblib.load(io.BytesIO(raw_bytes))
+        return bundle
+    except Exception as deser_err:
+        deser_err_type = type(deser_err).__name__
+
+    if deser_err_type is not None:
+        logger.error(
+            "Failed to deserialize verified model artifact (%s): %s",
+            artifact_name,
+            deser_err_type,
+        )
+        raise ModelIntegrityError(
+            f"Model artifact deserialization failed ({artifact_name}): {deser_err_type}"
+        ) from None
+
 
 class MLService:
     def __init__(self):
@@ -254,6 +395,7 @@ class MLService:
         self.feature_importance: Dict[str, Dict[str, float]] = {}
         self.X_train_bg: Optional[pd.DataFrame] = None
         self.is_initialized: bool = False
+        self.last_trained_sha256: Optional[str] = None
         self.cache_dir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "artifacts"
         )
@@ -281,10 +423,11 @@ class MLService:
     def train_and_cache(self, csv_path: Optional[str] = None) -> None:
         """Explicit reproducible training routine with disk caching."""
         target_csv = csv_path or settings.HEART_CSV_PATH
+        csv_name = safe_basename(target_csv, fallback="heart.csv")
         if not os.path.exists(target_csv):
-            raise FileNotFoundError(f"Training dataset not found at {target_csv}")
+            raise FileNotFoundError(f"Training dataset not found: {csv_name}")
 
-        logger.info("Training ML models using dataset: %s", target_csv)
+        logger.info("Training ML models using dataset: %s", csv_name)
         df = pd.read_csv(target_csv)
         X = df.drop("target", axis=1)[FEATURE_NAMES]
         y = df["target"]
@@ -377,13 +520,38 @@ class MLService:
         }
         joblib.dump(bundle, self.cache_path)
         self.is_initialized = True
-        logger.info("Successfully trained and saved model artifacts to %s", self.cache_path)
+
+        # Calculate and record SHA-256 of the generated artifact
+        with open(self.cache_path, "rb") as f:
+            generated_bytes = f.read()
+        self.last_trained_sha256 = compute_bytes_sha256(generated_bytes)
+
+        cache_name = safe_basename(self.cache_path, fallback="models_bundle.joblib")
+        logger.info("Successfully trained and saved model artifacts to %s", cache_name)
+        logger.info("=" * 70)
+        logger.info("ML MODEL ARTIFACT GENERATED (Development Workflow):")
+        logger.info("Artifact name:  %s", cache_name)
+        logger.info("SHA-256 digest: %s", self.last_trained_sha256)
+        logger.info(
+            "Notice: Before restarting or deploying, configure this digest in your environment:\n"
+            "  MODEL_BUNDLE_SHA256=%s\n"
+            "The application will not automatically trust newly generated artifacts.",
+            self.last_trained_sha256,
+        )
+        logger.info("=" * 70)
 
     def load_or_train(self) -> None:
-        """Load pre-trained artifacts from disk cache if present and complete; otherwise train."""
+        """
+        Load pre-trained artifacts from disk cache if present and cryptographically verified;
+        otherwise train and cache (in development only).
+        """
         if os.path.exists(self.cache_path):
             try:
-                bundle = joblib.load(self.cache_path)
+                bundle = verify_and_load_artifact(
+                    self.cache_path,
+                    expected_sha256=settings.MODEL_BUNDLE_SHA256,
+                    require_digest=True,
+                )
                 loaded_models = bundle.get("models", {})
                 if REQUIRED_MODELS.issubset(loaded_models.keys()):
                     self.models = loaded_models
@@ -393,14 +561,44 @@ class MLService:
                     self.feature_importance = bundle["feature_importance"]
                     self.X_train_bg = bundle["X_train_bg"]
                     self.is_initialized = True
-                    logger.info("Loaded models bundle successfully from cache.")
+                    logger.info("Loaded models bundle successfully from verified cache.")
                     return
                 else:
                     missing = REQUIRED_MODELS - set(loaded_models.keys())
                     logger.warning("Cache bundle is missing required models (%s); retraining.", missing)
+                    if settings.is_production:
+                        raise RuntimeError(
+                            f"Verified model bundle is incomplete; missing required models: {missing}. "
+                            "Runtime retraining is disallowed in production."
+                        )
+            except ModelIntegrityError:
+                # Security boundary: do NOT swallow or bypass integrity check failures
+                cache_name = safe_basename(self.cache_path, fallback="models_bundle.joblib")
+                logger.critical(
+                    "Model artifact integrity verification failed for %s. Refusing to deserialize or retrain.",
+                    cache_name,
+                )
+                raise
             except Exception as e:
-                logger.warning("Cache load failed (%s); retraining models.", str(e))
+                logger.warning("Cache load failed (%s); retraining models.", type(e).__name__)
+                if settings.is_production:
+                    raise
 
+        # Production boundary: missing artifacts must fail startup immediately
+        if settings.is_production:
+            cache_name = safe_basename(self.cache_path, fallback="models_bundle.joblib")
+            logger.critical(
+                "FATAL: Model artifact is missing (%s) in production! "
+                "Automatic runtime model training is strictly disallowed in production.",
+                cache_name,
+            )
+            raise FileNotFoundError(
+                f"Model artifact not found: {cache_name}. "
+                "Automatic runtime model training is strictly disallowed in production. "
+                "Production requires pre-built, verified model artifacts to be bundled with the deployment."
+            )
+
+        # In development: convenient training workflow
         self.train_and_cache()
 
     def explain(self, model: Any, x_arr: np.ndarray, scaled: bool = False, n_samples: int = 40) -> List[float]:
@@ -583,7 +781,7 @@ class MLService:
                 "features_metadata": features_meta,
             })
         except Exception as e:
-            logger.warning("Failed to enrich dataset stats: %s", e)
+            logger.warning("Failed to enrich dataset stats: %s", type(e).__name__)
 
         return self.dataset_stats
 
