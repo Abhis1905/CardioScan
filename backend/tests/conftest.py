@@ -12,12 +12,28 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
+# Ensure test session environment has safe defaults for local and automated testing.
+# These values are test defaults and placeholders only, never production credentials.
+os.environ.setdefault(
+    "MODEL_BUNDLE_SHA256",
+    "feb976cd9f101e12ef869d08c52d6d456ee666314866ae9a062fedccf688ce56",
+)
+os.environ.setdefault(
+    "REDIS_URL",
+    "redis://localhost:6379/0",
+)
+os.environ.setdefault(
+    "TURNSTILE_SECRET_KEY",
+    "0x4AAAAAAAMvM70123456789abcdefABCDEF",
+)
+
 from app.core.config import settings
 # Configure test settings overrides
 settings.ENVIRONMENT = "test"
 settings.EMAIL_PROVIDER = "mock"
 settings.ADMIN_EMAIL = "admin@example.com"
 settings.JWT_SECRET = "test-secret-key-32-characters-minimum-for-testing"
+settings.TURNSTILE_SECRET_KEY = None
 
 from app.core.security import hash_password, create_access_token
 from app.db.base import Base
