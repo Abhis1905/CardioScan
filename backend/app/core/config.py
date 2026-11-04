@@ -1,7 +1,12 @@
 import logging
+import math
 import os
-from typing import List, Optional, Union
+import re
+from typing import Any, List, Optional, Union
+from urllib.parse import urlparse
+from pydantic import field_validator, model_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 logger = logging.getLogger(__name__)
 
@@ -117,11 +122,49 @@ class Settings(BaseSettings):
     RATE_LIMIT_CHANGE_PASSWORD: int = 5
     RATE_LIMIT_CHANGE_PASSWORD_WINDOW: int = 60
 
+    # Distributed Rate Limiting via Redis (SEC-05)
+    REDIS_URL: Optional[str] = None
+    REDIS_MAX_CONNECTIONS: int = 50
+    REDIS_SOCKET_TIMEOUT: float = 1.0
+    REDIS_CONNECT_TIMEOUT: float = 1.0
+
+    @field_validator(
+        "REDIS_MAX_CONNECTIONS",
+        "REDIS_SOCKET_TIMEOUT",
+        "REDIS_CONNECT_TIMEOUT",
+        mode="before",
+    )
+    @classmethod
+    def _reject_redis_booleans(cls, v: Any, info: ValidationInfo) -> Any:
+        if isinstance(v, bool):
+            raise ValueError(f"{info.field_name} must not be a boolean")
+        return v
+
     # ML Training Data Path
     HEART_CSV_PATH: str = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         "heart.csv",
     )
+
+    # ML Model Artifact Integrity (SEC-03 / SEC-03.1)
+    # Trusted SHA-256 digest of models_bundle.joblib.
+    # In development, falls back to DEV_DEFAULT_MODEL_BUNDLE_SHA256 if not explicitly provided.
+    # In production, must be explicitly supplied in the deployment environment.
+    DEV_DEFAULT_MODEL_BUNDLE_SHA256: str = (
+        "feb976cd9f101e12ef869d08c52d6d456ee666314866ae9a062fedccf688ce56"
+    )
+    MODEL_BUNDLE_SHA256: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _populate_dev_model_sha(self) -> "Settings":
+        """
+        Populate default digest in development/test if not explicitly configured.
+        In production, never silently substitute a development default.
+        """
+        if self.ENVIRONMENT.lower().strip() != "production":
+            if self.MODEL_BUNDLE_SHA256 is None:
+                self.MODEL_BUNDLE_SHA256 = self.DEV_DEFAULT_MODEL_BUNDLE_SHA256
+        return self
 
     def validate_production_safety(self) -> None:
         """Enforce production configuration safety and fail-fast if requirements are not met."""
@@ -216,6 +259,119 @@ class Settings(BaseSettings):
         if not (self.ADMIN_EMAIL or "").strip():
             logger.warning(
                 "ADMIN_EMAIL is not configured. Administrative routes will fail closed (HTTP 403) until an admin email is configured in environment."
+            )
+
+        # 5. ML Model Artifact Integrity (SEC-03 / SEC-03.1)
+        model_sha = (self.MODEL_BUNDLE_SHA256 or "").strip().lower()
+        if not model_sha:
+            errors.append(
+                "MODEL_BUNDLE_SHA256 is missing. Production requires an explicitly configured "
+                "64-character hex SHA-256 digest in the deployment environment."
+            )
+        elif not re.match(r"^[0-9a-f]{64}$", model_sha):
+            errors.append(
+                f"MODEL_BUNDLE_SHA256 is malformed ({len(model_sha)} chars, invalid hex). "
+                "Expected 64-character lowercase hex string."
+            )
+
+        # 6. Distributed Rate Limiting (SEC-05 / SEC-05.1 / F-02)
+        if self.RATE_LIMIT_ENABLED:
+            redis_url = (self.REDIS_URL or "").strip()
+            if not redis_url:
+                errors.append(
+                    "REDIS_URL is missing. Production requires an explicitly configured Redis connection URL "
+                    "(e.g. redis:// or rediss://) when RATE_LIMIT_ENABLED=True to enforce distributed rate limiting."
+                )
+            else:
+                try:
+                    parsed_redis = urlparse(redis_url)
+                    scheme = (parsed_redis.scheme or "").lower()
+                    if scheme in ("redis", "rediss"):
+                        if any(c.isspace() for c in (parsed_redis.netloc or "")):
+                            errors.append(
+                                "REDIS_URL is invalid. Redis network address must not contain whitespace."
+                            )
+                        elif not parsed_redis.hostname:
+                            errors.append(
+                                "REDIS_URL is invalid. Network Redis connection URL (redis:// or rediss://) must specify a valid host."
+                            )
+                        elif any(c.isspace() for c in parsed_redis.hostname):
+                            errors.append(
+                                "REDIS_URL is invalid. Redis hostname must not contain whitespace."
+                            )
+
+                        try:
+                            port = parsed_redis.port
+                            if port is not None and not (1 <= port <= 65535):
+                                errors.append(
+                                    "REDIS_URL is invalid. Redis port must be an integer between 1 and 65535."
+                                )
+                        except ValueError:
+                            errors.append(
+                                "REDIS_URL is invalid. Redis port must be a valid integer between 1 and 65535."
+                            )
+
+                    elif scheme == "unix":
+                        if not parsed_redis.path or not parsed_redis.path.strip():
+                            errors.append(
+                                "REDIS_URL is invalid. Unix domain socket Redis connection URL (unix://) must specify a socket path."
+                            )
+                        elif any(c.isspace() for c in parsed_redis.path):
+                            errors.append(
+                                "REDIS_URL is invalid. Unix domain socket path must not contain whitespace."
+                            )
+                    else:
+                        errors.append(
+                            "REDIS_URL is invalid. Production requires a Redis connection URL starting with redis://, rediss://, or unix://."
+                        )
+                except Exception:
+                    errors.append(
+                        "REDIS_URL is malformed. Production requires a valid Redis connection URL."
+                    )
+
+        if (
+            isinstance(self.REDIS_MAX_CONNECTIONS, bool)
+            or not isinstance(self.REDIS_MAX_CONNECTIONS, int)
+            or self.REDIS_MAX_CONNECTIONS <= 0
+        ):
+            errors.append(
+                f"REDIS_MAX_CONNECTIONS must be a positive integer greater than zero (got {self.REDIS_MAX_CONNECTIONS})."
+            )
+        if (
+            isinstance(self.REDIS_SOCKET_TIMEOUT, bool)
+            or not isinstance(self.REDIS_SOCKET_TIMEOUT, (int, float))
+            or not math.isfinite(self.REDIS_SOCKET_TIMEOUT)
+            or self.REDIS_SOCKET_TIMEOUT <= 0
+        ):
+            errors.append(
+                f"REDIS_SOCKET_TIMEOUT must be a positive finite float greater than zero (got {self.REDIS_SOCKET_TIMEOUT})."
+            )
+        if (
+            isinstance(self.REDIS_CONNECT_TIMEOUT, bool)
+            or not isinstance(self.REDIS_CONNECT_TIMEOUT, (int, float))
+            or not math.isfinite(self.REDIS_CONNECT_TIMEOUT)
+            or self.REDIS_CONNECT_TIMEOUT <= 0
+        ):
+            errors.append(
+                f"REDIS_CONNECT_TIMEOUT must be a positive finite float greater than zero (got {self.REDIS_CONNECT_TIMEOUT})."
+            )
+
+        # 7. Cloudflare Turnstile Bot Protection (F-01)
+        turnstile_key = (self.TURNSTILE_SECRET_KEY or "").strip()
+        cloudflare_test_secrets = {
+            "1x0000000000000000000000000000000aa",
+            "2x0000000000000000000000000000000aa",
+            "3x0000000000000000000000000000000aa",
+        }
+        if not turnstile_key:
+            errors.append(
+                "TURNSTILE_SECRET_KEY is missing. Production requires an explicitly configured "
+                "Cloudflare Turnstile secret key."
+            )
+        elif turnstile_key.lower() in cloudflare_test_secrets:
+            errors.append(
+                "TURNSTILE_SECRET_KEY is configured with a Cloudflare published testing secret in production. "
+                "A genuine production secret key is required."
             )
 
         if errors:
